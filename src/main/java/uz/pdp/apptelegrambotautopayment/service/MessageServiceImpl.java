@@ -3,12 +3,16 @@ package uz.pdp.apptelegrambotautopayment.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import uz.pdp.apptelegrambotautopayment.enums.Lang;
 import uz.pdp.apptelegrambotautopayment.enums.LangFields;
 import uz.pdp.apptelegrambotautopayment.enums.State;
 import uz.pdp.apptelegrambotautopayment.model.User;
 import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
+
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +37,8 @@ public class MessageServiceImpl implements MessageService {
                 case START -> {
                     if (langService.getMessage(LangFields.BUTTON_LANG_SETTINGS, userId).equals(text)) {
                         selectLanguage(userId);
+                    } else if (langService.getMessage(LangFields.MY_CARD_TEXT, userId).equals(text)) {
+                        sendConnectCardText(message);
                     }
                 }
                 case SELECT_LANGUAGE -> changeLanguage(text, userId);
@@ -59,7 +65,16 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private void sendConnectCardText(Message message) {
-
+        Long userId = message.getFrom().getId();
+        User user = commonUtils.getUser(userId);
+        String text = langService.getMessage(LangFields.EMPTY_CARD_NUMBER_TEXT, userId);
+        String button = langService.getMessage(LangFields.ADD_CARD_NUMBER_TEXT, userId);
+        if (user.getCardNumber() != null) {
+            button = langService.getMessage(LangFields.CHANGE_CARD_NUMBER_TEXT, userId);
+            text = langService.getMessage(LangFields.PRESENT_CARD_NUMBER_TEXT, userId).formatted(user.getCardNumber());
+        }
+        InlineKeyboardMarkup markup = buttonService.urlKeyboard(List.of(Map.of(button, AppConstants.WEB_APP_URL.formatted(userId))));
+        sender.sendMessage(userId, text, markup);
     }
 
     private void start(Message message) {
