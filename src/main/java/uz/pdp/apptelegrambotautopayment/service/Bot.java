@@ -11,11 +11,14 @@ import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
 
 @Service
 public class Bot extends TelegramLongPollingBot {
-    public Bot() {
+    private final ProcessService processService;
+
+    public Bot(ProcessService processService) {
         super(new DefaultBotOptions(), AppConstants.BOT_TOKEN);
         try {
             TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
             api.registerBot(this);
+            this.processService = processService;
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
         }
@@ -23,7 +26,7 @@ public class Bot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-
+        processService.process(update);
     }
 
     @Override

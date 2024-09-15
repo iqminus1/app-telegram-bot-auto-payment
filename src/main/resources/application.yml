@@ -1,2 +1,11 @@
 server:
   port: 888
+spring:
+  datasource:
+    username: postgres
+    password: 123
+    url: jdbc:postgresql://localhost:5432/auto_payment_bot
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
