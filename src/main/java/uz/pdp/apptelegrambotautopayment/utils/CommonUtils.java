@@ -21,7 +21,7 @@ public class CommonUtils {
     }
 
     public User getUser(Long userId) {
-        return users.getOrDefault(userId, userRepository.findById(userId).orElse(userRepository.save(new User(userId, State.START, Lang.RU))));
+        return users.getOrDefault(userId, userRepository.findById(userId).orElse(userRepository.save(new User(userId, State.START, Lang.RU, null, null, null))));
     }
 
     public State getState(Long userId) {
@@ -38,5 +38,11 @@ public class CommonUtils {
 
     public String getLang(Long userId) {
         return getUser(userId).getLang().toString();
+    }
+
+    public void setLang(Long userId, Lang lang) {
+        User user = getUser(userId);
+        user.setLang(lang);
+        users.put(userId, user);
     }
 }

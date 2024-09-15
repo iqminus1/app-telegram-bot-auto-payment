@@ -24,4 +24,24 @@ public class LangServiceImpl implements LangService {
             return messageSource.getMessage(keyword.name(), null, new Locale(Lang.RU.name()));
         }
     }
+
+    public String getMessage(LangFields keyword, String lang) {
+        try {
+            return messageSource.getMessage(keyword.name(), null, new Locale(lang));
+        } catch (Exception e) {
+            return messageSource.getMessage(keyword.name(), null, new Locale(Lang.RU.name()));
+        }
+    }
+
+    @Override
+    public Lang getLanguageEnum(String text) {
+        if (text.equals(getMessage(LangFields.BUTTON_LANGUAGE_UZBEK, "uz"))) {
+            return Lang.UZ;
+        } else if (text.equals(getMessage(LangFields.BUTTON_LANGUAGE_RUSSIAN, "uz"))) {
+            return Lang.RU;
+        } else if (text.equals(getMessage(LangFields.BUTTON_LANGUAGE_ENGLISH, "uz"))) {
+            return Lang.EN;
+        }
+        return null;
+    }
 }

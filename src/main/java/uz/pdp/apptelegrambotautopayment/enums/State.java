@@ -1,5 +1,5 @@
 package uz.pdp.apptelegrambotautopayment.enums;
 
 public enum State {
-    START,
+    START, SELECT_LANGUAGE,
 }

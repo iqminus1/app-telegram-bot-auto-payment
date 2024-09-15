@@ -19,4 +19,10 @@ public class User {
     private State state;
 
     private Lang lang;
+
+    private String cardNumber;
+
+    private String cardExpiry;
+
+    private String cardCvv;
 }
