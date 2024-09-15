@@ -8,11 +8,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import uz.pdp.apptelegrambotautopayment.model.User;
 import uz.pdp.apptelegrambotautopayment.repository.UserRepository;
+import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 
 @Controller
 @RequiredArgsConstructor
 public class CardController {
     private final UserRepository userRepository;
+    private final CommonUtils commonUtils;
 
     @GetMapping("/connect")
     public String showCardForm(Model model) {
@@ -25,7 +27,7 @@ public class CardController {
                                   @RequestParam String cardExpiry,
                                   @RequestParam String cardCvv,
                                   Model model) {
-        User user = userRepository.findById(userId).orElse(new User());
+        User user = commonUtils.getUser(userId);
         user.setId(userId);
         user.setCardNumber(cardNumber);
         user.setCardExpiry(cardExpiry);

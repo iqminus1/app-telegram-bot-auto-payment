@@ -72,8 +72,8 @@ public class ButtonServiceImpl implements ButtonService {
 
             for (String text : map.keySet()) {
                 InlineKeyboardButton button = new InlineKeyboardButton();
-                button.setCallbackData(map.get(text));
-                button.setUrl(text);
+                button.setUrl(map.get(text));
+                button.setText(text);
                 row.add(button);
             }
 

@@ -21,7 +21,9 @@ public class CommonUtils {
     }
 
     public User getUser(Long userId) {
-        return users.getOrDefault(userId, userRepository.findById(userId).orElse(userRepository.save(new User(userId, State.START, Lang.RU, null, null, null))));
+        return users.getOrDefault(userId,
+                userRepository.findById(userId).orElse(
+                        userRepository.save(User.builder().id(userId).state(State.START).lang(Lang.RU).build())));
     }
 
     public State getState(Long userId) {

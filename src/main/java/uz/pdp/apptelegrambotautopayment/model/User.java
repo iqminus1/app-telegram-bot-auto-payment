@@ -6,12 +6,15 @@ import lombok.*;
 import uz.pdp.apptelegrambotautopayment.enums.Lang;
 import uz.pdp.apptelegrambotautopayment.enums.State;
 
+import java.time.LocalDateTime;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Setter
 @Getter
 @ToString
 @Entity(name = "users")
+@Builder
 public class User {
     @Id
     private Long id;
@@ -25,4 +28,8 @@ public class User {
     private String cardExpiry;
 
     private String cardCvv;
+
+    private boolean subscribed;
+
+    private LocalDateTime subscriptionEndTime;
 }
