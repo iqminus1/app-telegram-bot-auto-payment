@@ -100,7 +100,7 @@ public class ButtonServiceImpl implements ButtonService {
 
     @Override
     public ReplyKeyboard start(String userLang) {
-        String message = langService.getMessage(LangFields.MY_CARD_TEXT, userLang);
+        String message = langService.getMessage(LangFields.ADD_CARD_NUMBER_TEXT, userLang);
         String changeLang = langService.getMessage(LangFields.BUTTON_LANG_SETTINGS, userLang);
         return withString(List.of(message,changeLang));
     }
