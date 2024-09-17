@@ -1,5 +1,9 @@
 package uz.pdp.apptelegrambotautopayment.utils;
 
+import uz.pdp.apptelegrambotautopayment.model.User;
+
+import java.time.LocalDateTime;
+
 public interface AppConstants {
     String BOT_TOKEN = "7320858493:AAFtIOr8bofMTKFuMjegu8SVuxxrdTMYagI";
     String BOT_USERNAME = "manager_groups_v1_bot";
@@ -22,4 +26,14 @@ public interface AppConstants {
     String ATMOS_REMOVE_CARD_URL = "https://partner.atmos.uz/partner/remove-card";
 
     Integer STORE_ID = 7977;
+    long SUBSCRIPTION_MONTH = 1;
+
+    static User setSubscriptionTime(User user) {
+        if (user.getSubscriptionEndTime().isBefore(LocalDateTime.now())) {
+            user.setSubscriptionEndTime(LocalDateTime.now().plusMinutes(SUBSCRIPTION_MONTH));
+        } else
+            user.setSubscriptionEndTime(user.getSubscriptionEndTime().plusMinutes(SUBSCRIPTION_MONTH));
+        return user;
+    }
+
 }

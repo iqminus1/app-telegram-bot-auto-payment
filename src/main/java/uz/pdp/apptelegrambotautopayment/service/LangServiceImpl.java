@@ -21,7 +21,7 @@ public class LangServiceImpl implements LangService {
         try {
             return messageSource.getMessage(keyword.name(), null, new Locale(lang));
         } catch (Exception e) {
-            return messageSource.getMessage(keyword.name(), null, new Locale(Lang.RU.name()));
+            return messageSource.getMessage(keyword.name(), null, new Locale(Lang.UZ.name()));
         }
     }
 
@@ -29,7 +29,7 @@ public class LangServiceImpl implements LangService {
         try {
             return messageSource.getMessage(keyword.name(), null, new Locale(lang));
         } catch (Exception e) {
-            return messageSource.getMessage(keyword.name(), null, new Locale(Lang.RU.name()));
+            return messageSource.getMessage(keyword.name(), null, new Locale(Lang.UZ.name()));
         }
     }
 
@@ -37,10 +37,8 @@ public class LangServiceImpl implements LangService {
     public Lang getLanguageEnum(String text) {
         if (text.equals(getMessage(LangFields.BUTTON_LANGUAGE_UZBEK, "uz"))) {
             return Lang.UZ;
-        } else if (text.equals(getMessage(LangFields.BUTTON_LANGUAGE_RUSSIAN, "uz"))) {
-            return Lang.RU;
-        } else if (text.equals(getMessage(LangFields.BUTTON_LANGUAGE_ENGLISH, "uz"))) {
-            return Lang.EN;
+        } else if (text.equals(getMessage(LangFields.BUTTON_LANGUAGE_UZBEKKR, "uz"))) {
+            return Lang.UZKR;
         }
         return null;
     }

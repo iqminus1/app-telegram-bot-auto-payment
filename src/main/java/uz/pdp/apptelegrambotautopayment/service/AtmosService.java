@@ -16,5 +16,7 @@ public interface AtmosService {
 
     ApplyResponse applyPayment(ApplyRequest request);
 
+    ApplyResponse autoPayment(Long userId);
+
     CardRemovalResponse removeCard(CardRequest request);
 }

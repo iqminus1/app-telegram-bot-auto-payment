@@ -10,16 +10,11 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
 
-import java.util.Random;
-import java.util.UUID;
-
 @Component
 public class Sender extends DefaultAbsSender {
-    private final Random random;
 
-    public Sender(Random random) {
+    public Sender() {
         super(new DefaultBotOptions(), AppConstants.BOT_TOKEN);
-        this.random = random;
     }
 
     public void sendMessage(Long userId, String text) {
@@ -76,28 +71,34 @@ public class Sender extends DefaultAbsSender {
         }
     }
 
-    public void deleteInviteLink(Long groupId, String link) {
+    public String getLink(Long groupId) {
         try {
-            executeAsync(new RevokeChatInviteLink(groupId.toString(), link));
+            EditChatInviteLink editChatInviteLink = new EditChatInviteLink();
+            editChatInviteLink.setChatId(groupId);
+            editChatInviteLink.setCreatesJoinRequest(true);
+            editChatInviteLink.setName("Link by bot");
+            ChatInviteLink execute = execute(editChatInviteLink);
+            return execute.getInviteLink();
+        } catch (TelegramApiException e) {
+            try {
+                CreateChatInviteLink createChatInviteLink = new CreateChatInviteLink();
+                createChatInviteLink.setName("Link by bot");
+                createChatInviteLink.setCreatesJoinRequest(true);
+                createChatInviteLink.setChatId(groupId);
+
+                return execute(createChatInviteLink).getInviteLink();
+            } catch (TelegramApiException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+    }
+
+
+    public boolean checkChatMember(Long userId, Long groupId) {
+        try {
+            return !execute(new GetChatMember(groupId.toString(), userId)).getStatus().equals("left");
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public String getLink(Long groupId) {
-        try {
-            return createLink(groupId);
-        } catch (TelegramApiException e) {
-            throw new RuntimeException("Не удалось создать или обновить ссылку на приглашение", e);
-        }
-    }
-
-    private String createLink(Long groupId) throws TelegramApiException {
-        CreateChatInviteLink createChatInviteLink = new CreateChatInviteLink();
-        createChatInviteLink.setChatId(groupId);
-        createChatInviteLink.setCreatesJoinRequest(true);
-        createChatInviteLink.setName(UUID.randomUUID().toString().substring(random.nextInt(1, 7), random.nextInt(10, 32)));
-        ChatInviteLink execute = execute(createChatInviteLink);
-        return execute.getInviteLink();
     }
 }

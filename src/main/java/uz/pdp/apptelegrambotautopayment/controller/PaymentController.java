@@ -32,11 +32,17 @@ public class PaymentController {
     }
 
     @PostMapping("/preApplyPayment")
-    public PreApplyResponse preApplyPayment(@RequestBody PreApplyRequest request){
+    public PreApplyResponse preApplyPayment(@RequestBody PreApplyRequest request) {
         return atmosService.preApplyPayment(request);
     }
+
     @PostMapping("/applyPayment")
-    public ApplyResponse applyPayment(@RequestBody ApplyRequest request){
+    public ApplyResponse applyPayment(@RequestBody ApplyRequest request) {
         return atmosService.applyPayment(request);
+    }
+
+    @PostMapping("/removeCard")
+    public CardRemovalResponse removeCard(@RequestBody CardRequest cardRequest) {
+        return atmosService.removeCard(cardRequest);
     }
 }

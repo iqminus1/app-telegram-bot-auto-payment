@@ -27,7 +27,13 @@ public class User {
 
     private String cardExpiry;
 
-    private String cardCvv;
+    private String transactionId;
+
+    private String cardToken;
+
+    private Long cardId;
+
+    private String contactNumber;
 
     private boolean subscribed;
 

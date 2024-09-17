@@ -1,6 +1,5 @@
 package uz.pdp.apptelegrambotautopayment.service;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 
@@ -16,8 +15,12 @@ public interface ButtonService {
     ReplyKeyboard withString(List<String> list, int rowSize);
 
     InlineKeyboardMarkup callbackKeyboard(List<Map<String, String>> textData);
+
     InlineKeyboardMarkup webAppKeyboard(String text, String url);
+
     ReplyKeyboard language(Long userId);
 
-    ReplyKeyboard start(String userLang);
+    ReplyKeyboard start(Long userId);
+
+    ReplyKeyboard requestContact(Long userId);
 }

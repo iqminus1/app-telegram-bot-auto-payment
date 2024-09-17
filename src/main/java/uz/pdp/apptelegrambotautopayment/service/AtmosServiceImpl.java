@@ -12,7 +12,9 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import uz.pdp.apptelegrambotautopayment.dto.request.*;
 import uz.pdp.apptelegrambotautopayment.dto.response.*;
+import uz.pdp.apptelegrambotautopayment.model.User;
 import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
+import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 
 import java.util.Map;
 
@@ -22,6 +24,7 @@ public class AtmosServiceImpl implements AtmosService {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final CommonUtils commonUtils;
     private String token = null;
     private long tokenExpirationTime = 0;
 
@@ -35,6 +38,8 @@ public class AtmosServiceImpl implements AtmosService {
 
                 MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
                 body.add("grant_type", "client_credentials");
+                if (token != null)
+                    body.add("refresh_token", token);
 
                 HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
 
@@ -150,14 +155,31 @@ public class AtmosServiceImpl implements AtmosService {
     }
 
     @Override
+    public ApplyResponse autoPayment(Long userId) {
+        User user = commonUtils.getUser(userId);
+        TransactionResponse transaction = createTransaction(new TransactionRequest(userId));
+        String transactionId = transaction.getTransactionId();
+        preApplyPayment(new PreApplyRequest(transactionId, user.getCardToken()));
+        return applyPayment(new ApplyRequest(transactionId));
+    }
+
+    @Override
     public CardRemovalResponse removeCard(CardRequest request) {
         HttpEntity<String> entity = getHttpEntity(request);
 
-        ResponseEntity<CardRemovalResponse> response = restTemplate.exchange(
-                AppConstants.ATMOS_REMOVE_CARD_URL, HttpMethod.POST, entity, CardRemovalResponse.class);
+        ResponseEntity<String> response = restTemplate.exchange(
+                AppConstants.ATMOS_REMOVE_CARD_URL, HttpMethod.POST, entity, String.class);
 
-        return response.getBody();
+        try {
+            JsonNode jsonNode = objectMapper.readTree(response.getBody());
+            JsonNode removeResponse = jsonNode.get("data");
+            return objectMapper.treeToValue(removeResponse, CardRemovalResponse.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
     }
+
 
     private <T> HttpEntity<String> getHttpEntity(T request) {
         String token = getToken();

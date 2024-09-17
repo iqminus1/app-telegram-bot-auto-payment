@@ -9,8 +9,6 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Random;
-
 @EnableScheduling
 @SpringBootApplication
 public class AppTelegramBotAutoPaymentApplication {
@@ -33,10 +31,6 @@ public class AppTelegramBotAutoPaymentApplication {
         return new RestTemplate();
     }
 
-    @Bean
-    public Random random() {
-        return new Random();
-    }
 
     @Bean
     public ObjectMapper objectMapper() {
