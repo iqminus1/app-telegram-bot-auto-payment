@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo;
 import uz.pdp.apptelegrambotautopayment.enums.LangFields;
+import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ButtonServiceImpl implements ButtonService {
     private final LangService langService;
+    private final CommonUtils commonUtils;
 
     @Override
     public ReplyKeyboard withString(List<String> list, int rowSize) {
@@ -81,17 +83,40 @@ public class ButtonServiceImpl implements ButtonService {
 
         list.add(langService.getMessage(LangFields.BUTTON_LANGUAGE_UZBEK, userId));
 
-        list.add(langService.getMessage(LangFields.BUTTON_LANGUAGE_RUSSIAN, userId));
-
-        list.add(langService.getMessage(LangFields.BUTTON_LANGUAGE_ENGLISH, userId));
+        list.add(langService.getMessage(LangFields.BUTTON_LANGUAGE_UZBEKKR, userId));
 
         return withString(list);
     }
 
     @Override
-    public ReplyKeyboard start(String userLang) {
-        String message = langService.getMessage(LangFields.ADD_CARD_NUMBER_TEXT, userLang);
-        String changeLang = langService.getMessage(LangFields.BUTTON_LANG_SETTINGS, userLang);
-        return withString(List.of(message, changeLang));
+    public ReplyKeyboard start(Long userId) {
+        String message = langService.getMessage(LangFields.ADD_CARD_NUMBER_TEXT, userId);
+        if (commonUtils.getUser(userId).getCardToken() != null) {
+            message = langService.getMessage(LangFields.REMOVE_CARD_NUMBER_TEXT, userId);
+        }
+//        String changeLang = langService.getMessage(LangFields.BUTTON_LANG_SETTINGS, userId);
+        return withString(List.of(message));
+    }
+
+    @Override
+    public ReplyKeyboard requestContact(Long userId) {
+        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
+        markup.setResizeKeyboard(true);
+        List<KeyboardRow> rows = new ArrayList<>();
+        //contact req
+        KeyboardRow row1 = new KeyboardRow();
+        KeyboardButton request = new KeyboardButton(langService.getMessage(LangFields.REQUEST_CONTACT_TEXT, userId));
+        request.setRequestContact(true);
+        row1.add(request);
+
+        //back
+        KeyboardButton back = new KeyboardButton(langService.getMessage(LangFields.BACK_TEXT, userId));
+        KeyboardRow row2 = new KeyboardRow();
+        row2.add(back);
+
+        rows.add(row1);
+        rows.add(row2);
+        markup.setKeyboard(rows);
+        return markup;
     }
 }

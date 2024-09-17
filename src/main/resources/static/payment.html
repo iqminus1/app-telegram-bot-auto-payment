@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment</title>
+    <script>
+        async function submitCard() {
+            const cardNumber = document.getElementById('cardNumber').value;
+            const expiryDate = document.getElementById('expiryDate').value;
+
+            const response = await fetch('http://localhost:888/api/initializeCardBinding', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ cardNumber, expiryDate })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById('verificationCodeSection').style.display = 'block';
+                document.getElementById('code').dataset.requestId = data.requestId;
+            } else {
+                alert('Error initializing card binding');
+            }
+        }
+
+        async function confirmCardBinding() {
+            const code = document.getElementById('code').value;
+            const requestId = document.getElementById('code').dataset.requestId;
+
+            const response = await fetch('/api/confirmCardBinding', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code, requestId })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                alert('Payment successful!');
+                window.location.href = '/thank-you.html'; // Redirect to a thank you page
+            } else {
+                alert('Error confirming card binding');
+            }
+        }
+    </script>
+</head>
+<body>
+<h1>Payment Form</h1>
+<div id="paymentForm">
+    <label for="cardNumber">Card Number:</label>
+    <input type="text" id="cardNumber" required>
+    <br>
+    <label for="expiryDate">Expiry Date (MM/YY):</label>
+    <input type="text" id="expiryDate" required>
+    <br>
+    <button type="button" onclick="submitCard()">Submit</button>
+</div>
+
+<div id="verificationCodeSection" style="display: none;">
+    <h2>Enter Verification Code</h2>
+    <label for="code">Code:</label>
+    <input type="text" id="code" required>
+    <br>
+    <button type="button" onclick="confirmCardBinding()">Confirm</button>
+</div>
+</body>
+</html>
