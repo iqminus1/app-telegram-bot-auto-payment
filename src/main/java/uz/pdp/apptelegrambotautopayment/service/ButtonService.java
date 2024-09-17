@@ -16,7 +16,7 @@ public interface ButtonService {
     ReplyKeyboard withString(List<String> list, int rowSize);
 
     InlineKeyboardMarkup callbackKeyboard(List<Map<String, String>> textData);
-    InlineKeyboardMarkup urlKeyboard(List<Map<String, String>> textUrl);
+    InlineKeyboardMarkup webAppKeyboard(String text, String url);
     ReplyKeyboard language(Long userId);
 
     ReplyKeyboard start(String userLang);

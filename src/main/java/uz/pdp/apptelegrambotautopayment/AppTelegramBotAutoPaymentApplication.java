@@ -1,5 +1,6 @@
 package uz.pdp.apptelegrambotautopayment;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.CharEncoding;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -7,6 +8,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Random;
 
 @EnableScheduling
 @SpringBootApplication
@@ -28,5 +31,15 @@ public class AppTelegramBotAutoPaymentApplication {
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
+    }
+
+    @Bean
+    public Random random() {
+        return new Random();
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
     }
 }

@@ -5,5 +5,4 @@ import lombok.Data;
 @Data
 public class CardRequest {
     private String cardId;
-    // Другие необходимые поля
 }

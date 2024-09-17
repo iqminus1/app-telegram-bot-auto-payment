@@ -3,6 +3,7 @@ package uz.pdp.apptelegrambotautopayment.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import uz.pdp.apptelegrambotautopayment.enums.Lang;
@@ -36,9 +37,11 @@ public class MessageServiceImpl implements MessageService {
             switch (commonUtils.getState(userId)) {
                 case START -> {
                     if (langService.getMessage(LangFields.BUTTON_LANG_SETTINGS, userId).equals(text)) {
+
                         selectLanguage(userId);
                     } else if (langService.getMessage(LangFields.ADD_CARD_NUMBER_TEXT, userId).equals(text)) {
-                        sendAddCardNumberText(userId);
+//                        sendAddCardNumberText(userId);
+                        sendWebAppForPayment(userId);
                     }
                 }
                 case SENDING_CARD_NUMBER -> {
@@ -61,6 +64,13 @@ public class MessageServiceImpl implements MessageService {
                 case SELECT_LANGUAGE -> changeLanguage(text, userId);
             }
         }
+    }
+
+    private void sendWebAppForPayment(Long userId) {
+        String text = langService.getMessage(LangFields.FOR_ADD_CARD_NUMBER_TEXT, userId);
+        String buttonText = langService.getMessage(LangFields.ADD_CARD_TEXT, userId);
+        InlineKeyboardMarkup markup = buttonService.webAppKeyboard(buttonText, AppConstants.WEB_APP_URL.formatted(userId));
+        sender.sendMessage(userId, text, markup);
     }
 
     private void sendingCardExpire(Long userId, String text) {
