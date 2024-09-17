@@ -8,6 +8,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
+import org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo;
 import uz.pdp.apptelegrambotautopayment.enums.LangFields;
 
 import java.util.ArrayList;
@@ -63,24 +64,13 @@ public class ButtonServiceImpl implements ButtonService {
     }
 
     @Override
-    public InlineKeyboardMarkup urlKeyboard(List<Map<String, String>> textUrl) {
+    public InlineKeyboardMarkup webAppKeyboard(String text, String url) {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
 
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-        List<InlineKeyboardButton> row = new ArrayList<>();
-        for (Map<String, String> map : textUrl) {
-
-            for (String text : map.keySet()) {
-                InlineKeyboardButton button = new InlineKeyboardButton();
-                button.setUrl(map.get(text));
-                button.setText(text);
-                row.add(button);
-            }
-
-            rows.add(row);
-            row = new ArrayList<>();
-
-        }
+        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton(text);
+        inlineKeyboardButton.setWebApp(new WebAppInfo(url));
+        rows.add(List.of(inlineKeyboardButton));
         markup.setKeyboard(rows);
         return markup;
     }
@@ -102,6 +92,6 @@ public class ButtonServiceImpl implements ButtonService {
     public ReplyKeyboard start(String userLang) {
         String message = langService.getMessage(LangFields.ADD_CARD_NUMBER_TEXT, userLang);
         String changeLang = langService.getMessage(LangFields.BUTTON_LANG_SETTINGS, userLang);
-        return withString(List.of(message,changeLang));
+        return withString(List.of(message, changeLang));
     }
 }

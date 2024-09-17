@@ -3,9 +3,10 @@ package uz.pdp.apptelegrambotautopayment.utils;
 public interface AppConstants {
     String BOT_TOKEN = "7320858493:AAFtIOr8bofMTKFuMjegu8SVuxxrdTMYagI";
     String BOT_USERNAME = "manager_groups_v1_bot";
-    String ATMOS_API_KEY = "*****";
     String START = "/start";
     Long PRICE = 1000L;
+
+    String WEB_APP_URL = "https://192.168.0.105:888/payment.html?userId=%s";
 
     //Auth Atmos
     String CLIENT_ID = "your_client_id";
@@ -20,4 +21,5 @@ public interface AppConstants {
     String ATMOS_APPLY_URL = "https://partner.atmos.uz/merchant/pay/apply-ofd";
     String ATMOS_REMOVE_CARD_URL = "https://partner.atmos.uz/partner/remove-card";
 
+    Integer STORE_ID = 7977;
 }
