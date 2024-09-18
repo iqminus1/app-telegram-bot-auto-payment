@@ -5,8 +5,8 @@ import uz.pdp.apptelegrambotautopayment.model.User;
 import java.time.LocalDateTime;
 
 public interface AppConstants {
-    String BOT_TOKEN = "7320858493:AAFtIOr8bofMTKFuMjegu8SVuxxrdTMYagI";
-    String BOT_USERNAME = "manager_groups_v1_bot";
+    String BOT_TOKEN = "6027918055:AAHfPXcPeBad31_qqqrndyqc5fjpTcqAuG0";
+    String BOT_USERNAME = "upload_your_work_bot";
     String START = "/start";
     Long PRICE = 1000L;
 

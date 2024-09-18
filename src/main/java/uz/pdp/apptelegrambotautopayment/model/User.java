@@ -38,4 +38,6 @@ public class User {
     private boolean subscribed;
 
     private LocalDateTime subscriptionEndTime;
+
+    private boolean payment;
 }

@@ -21,6 +21,8 @@ import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 import uz.pdp.apptelegrambotautopayment.utils.Temp;
 
+import java.text.DecimalFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -56,6 +58,12 @@ public class MessageServiceImpl implements MessageService {
                         } else if (langService.getMessage(LangFields.ADD_CARD_NUMBER_TEXT, userId).equals(text)) {
                             sendAddCardNumberText(userId);
 //                        sendWebAppForPayment(userId);
+                        } else if (langService.getMessage(LangFields.BUTTON_PAYMENT_HISTORY_TEXT, userId).equals(text)) {
+                            showPaymentHistory(userId);
+                        } else if (langService.getMessage(LangFields.START_PAYMENT_TEXT, userId).equals(text)) {
+                            startPayment(userId);
+                        } else if (langService.getMessage(LangFields.STOP_PAYMENT_TEXT, userId).equals(text)) {
+                            stopPayment(userId);
                         }
                     }
                     case SENDING_CARD_NUMBER -> {
@@ -85,6 +93,55 @@ public class MessageServiceImpl implements MessageService {
                     checkContact(message);
             }
         }
+    }
+
+    private void stopPayment(Long userId) {
+        User user = commonUtils.getUser(userId);
+        if (!user.isPayment())
+            return;
+        user.setPayment(false);
+        userRepository.save(user);
+        commonUtils.updateUser(user);
+        sender.sendMessage(userId, langService.getMessage(LangFields.PAYMENT_IS_STOPPED_TEXT, userId));
+    }
+
+    private void startPayment(Long userId) {
+        User user = commonUtils.getUser(userId);
+        if (user.getCardToken() == null) {
+            sendAddCardNumberText(userId);
+            return;
+        }
+        if (user.isPayment())
+            return;
+        user.setPayment(true);
+        userRepository.save(user);
+        commonUtils.updateUser(user);
+        sender.sendMessage(userId, langService.getMessage(LangFields.PAYMENT_IS_STARTED_TEXT, userId));
+    }
+
+    private void showPaymentHistory(Long userId) {
+        List<Transaction> transactions = transactionRepository.findAllByUserIdOrderByPayAtDesc(userId);
+        if (transactions.isEmpty()) {
+            sender.sendMessage(userId, langService.getMessage(LangFields.EMPTY_PAYMENT_HISTORY_TEXT, userId));
+            return;
+        }
+        int i = 0;
+        StringBuilder sb = new StringBuilder();
+        int size = transactions.size();
+        String som = langService.getMessage(LangFields.SOM_TEXT, userId);
+        for (Transaction transaction : transactions) {
+            sb.append(size - i++).append(". ")
+                    .append(transaction.getPayAt().toLocalDate()).append(" ")
+                    .append(transaction.getPayAt().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss")))
+                    .append(" - ").append(formatLong(transaction.getAmount() / 100)).append(" ").append(som).append("\n");
+        }
+        String message = langService.getMessage(LangFields.LIST_PAYMENT_HISTORY_TEXT, userId);
+        sender.sendMessage(userId, message + sb);
+    }
+
+    public String formatLong(long number) {
+        DecimalFormat df = new DecimalFormat("###,###,###.00");
+        return df.format(number).replace(',', '.').replace('.', ',');
     }
 
     private void checkContact(Message message) {
@@ -125,10 +182,6 @@ public class MessageServiceImpl implements MessageService {
     private void checkCardCode(Long userId, String text) {
         User user = temp.getUser(userId);
         CardBindingConfirmResponse cardBindingConfirmResponse = atmosService.confirmCardBinding(new CardBindingConfirmRequest(text, user.getTransactionId()));
-//        if (cardBindingConfirmResponse.getBalance() < (AppConstants.PRICE * 100)) {
-//            sender.sendMessage(userId, langService.getMessage(LangFields.NOT_ENOUGH_MONEY_TEXT, userId));
-//            return;
-//        }
         user.setCardToken(cardBindingConfirmResponse.getCardToken());
         user.setCardId(cardBindingConfirmResponse.getCardId());
         commonUtils.updateUser(user);
@@ -141,6 +194,7 @@ public class MessageServiceImpl implements MessageService {
             transactionRepository.save(new Transaction(applyResponse));
             AppConstants.setSubscriptionTime(user);
             user.setState(State.START);
+            user.setPayment(true);
             userRepository.save(user);
             commonUtils.updateUser(user);
             List<Group> groups = groupRepository.findAll();
