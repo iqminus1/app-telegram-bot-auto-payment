@@ -7,6 +7,8 @@ import jakarta.persistence.Id;
 import lombok.*;
 import uz.pdp.apptelegrambotautopayment.dto.response.ApplyResponse;
 
+import java.time.LocalDateTime;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Setter
@@ -26,10 +28,13 @@ public class Transaction {
 
     private Long amount;
 
+    private LocalDateTime payAt;
+
     public Transaction(ApplyResponse applyResponse) {
         this.amount = applyResponse.getAmount();
         this.userId = applyResponse.getUserId();
         this.transId = applyResponse.getTransId();
         this.successTransId = applyResponse.getSuccessTransId();
+        this.payAt = LocalDateTime.now();
     }
 }

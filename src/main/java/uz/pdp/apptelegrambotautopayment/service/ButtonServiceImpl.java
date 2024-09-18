@@ -94,8 +94,12 @@ public class ButtonServiceImpl implements ButtonService {
         if (commonUtils.getUser(userId).getCardToken() != null) {
             message = langService.getMessage(LangFields.REMOVE_CARD_NUMBER_TEXT, userId);
         }
+        String history = langService.getMessage(LangFields.BUTTON_PAYMENT_HISTORY_TEXT, userId);
+        String paymentStatus = langService.getMessage(LangFields.START_PAYMENT_TEXT, userId);
+        if (commonUtils.getUser(userId).isPayment())
+            message = langService.getMessage(LangFields.STOP_PAYMENT_TEXT, userId);
 //        String changeLang = langService.getMessage(LangFields.BUTTON_LANG_SETTINGS, userId);
-        return withString(List.of(message));
+        return withString(List.of(message, history, paymentStatus));
     }
 
     @Override
