@@ -17,4 +17,5 @@ public class Group {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private Long groupId;
+    private String token;
 }
