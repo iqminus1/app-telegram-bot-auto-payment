@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -12,12 +13,17 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import uz.pdp.apptelegrambotautopayment.dto.request.*;
 import uz.pdp.apptelegrambotautopayment.dto.response.*;
+import uz.pdp.apptelegrambotautopayment.model.Group;
 import uz.pdp.apptelegrambotautopayment.model.User;
+import uz.pdp.apptelegrambotautopayment.repository.GroupRepository;
 import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AtmosServiceImpl implements AtmosService {
@@ -25,6 +31,8 @@ public class AtmosServiceImpl implements AtmosService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final CommonUtils commonUtils;
+    private final GroupRepository groupRepository;
+    private final Sender sender;
     private String token = null;
     private long tokenExpirationTime = 0;
 
@@ -32,6 +40,12 @@ public class AtmosServiceImpl implements AtmosService {
     public String getToken() {
         if (token == null || System.currentTimeMillis() >= tokenExpirationTime) {
             try {
+                List<Group> groups = groupRepository.findAll();
+                if (token == null) {
+                    if (groups.size() == 1) {
+                        token = groups.get(0).getToken();
+                    }
+                }
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
                 headers.setBasicAuth(AppConstants.CLIENT_ID, AppConstants.CLIENT_SECRET);
@@ -46,12 +60,17 @@ public class AtmosServiceImpl implements AtmosService {
                 ResponseEntity<Map<String, String>> response = restTemplate.exchange(
                         AppConstants.ATMOS_AUTH_URL, HttpMethod.POST, entity, new ParameterizedTypeReference<>() {
                         });
-
+                log.info(response.toString());
                 if (response.getStatusCode() == HttpStatus.OK) {
                     Map<String, String> bodyMap = response.getBody();
                     if (bodyMap != null) {
                         token = bodyMap.get("access_token");
                         tokenExpirationTime = System.currentTimeMillis() + (60 * 60 * 1000); // 1 час
+                        if (groups.size() == 1) {
+                            Group group = groups.get(0);
+                            group.setToken(token);
+                            groupRepository.save(group);
+                        }
                     }
                 } else {
                     token = null;
@@ -65,11 +84,16 @@ public class AtmosServiceImpl implements AtmosService {
 
     @Override
     public CardBindingInitResponse initializeCardBinding(CardBindingInitRequest request) {
+        log.info(LocalDateTime.now().toString());
+        log.info("Card init kirdi");
+        log.info(request.toString());
         HttpEntity<String> entity = getHttpEntity(request);
 
         ResponseEntity<String> response = restTemplate.exchange(
                 AppConstants.ATMOS_BIND_CARD_INIT_URL, HttpMethod.POST, entity, String.class);
-
+        log.info(response.toString());
+        log.info(LocalDateTime.now().toString());
+        log.info("Card init Javob oldi \n\n");
         if (response.getStatusCode() == HttpStatus.OK) {
             try {
                 JsonNode data = objectMapper.readTree(response.getBody());
@@ -86,10 +110,16 @@ public class AtmosServiceImpl implements AtmosService {
 
     @Override
     public CardBindingConfirmResponse confirmCardBinding(CardBindingConfirmRequest request) {
+        log.info(LocalDateTime.now().toString());
+        log.info("Card confirm kirdi");
+        log.info(request.toString());
         HttpEntity<String> entity = getHttpEntity(request);
 
         ResponseEntity<String> response = restTemplate.exchange(
                 AppConstants.ATMOS_BIND_CARD_CONFIRM_URL, HttpMethod.POST, entity, String.class);
+        log.info(response.toString());
+        log.info(LocalDateTime.now().toString());
+        log.info("Card confirm Javob oldi \n\n");
 
         if (response.getStatusCode() == HttpStatus.OK) {
             try {
@@ -100,16 +130,25 @@ public class AtmosServiceImpl implements AtmosService {
                 throw new RuntimeException(e);
             }
         } else {
+            sender.sendMessage(5182943798L, response.toString());
             throw new RuntimeException("Ошибка при подтверждении привязки карты: " + response.getStatusCode());
         }
     }
 
     @Override
     public TransactionResponse createTransaction(TransactionRequest request) {
+        log.info(LocalDateTime.now().toString());
+        log.info("create transaction kirdi");
+        log.info(request.toString());
+        log.info(request.toString());
         HttpEntity<String> entity = getHttpEntity(request);
 
         ResponseEntity<String> response = restTemplate.exchange(
                 AppConstants.ATMOS_CREATE_TRANSACTION_URL, HttpMethod.POST, entity, String.class);
+
+        log.info(response.toString());
+        log.info(LocalDateTime.now().toString());
+        log.info("transaction Javob oldi \n\n");
 
         try {
             JsonNode jsonNode = objectMapper.readTree(response.getBody());
@@ -119,16 +158,23 @@ public class AtmosServiceImpl implements AtmosService {
             long userId = storeTransaction.get("account").asLong();
             return new TransactionResponse(transactionId, amount, userId);
         } catch (JsonProcessingException e) {
+            sender.sendMessage(5182943798L, response.toString());
+            sender.sendMessage(5182943798L, e.toString());
             throw new RuntimeException(e);
         }
     }
 
     @Override
     public PreApplyResponse preApplyPayment(PreApplyRequest request) {
+        log.info(LocalDateTime.now().toString());
+        log.info("pre apply kirdi");
+        log.info(request.toString());
+        log.info(request.toString());
         HttpEntity<String> entity = getHttpEntity(request);
 
         restTemplate.exchange(
                 AppConstants.ATMOS_PRE_APPLY_URL, HttpMethod.POST, entity, String.class);
+        log.info("Pre apply ge bordi\n\n");
 
 
         return new PreApplyResponse(request.getTransactionId());
@@ -136,11 +182,16 @@ public class AtmosServiceImpl implements AtmosService {
 
     @Override
     public ApplyResponse applyPayment(ApplyRequest request) {
+        log.info(LocalDateTime.now().toString());
+        log.info("apply  kirdi");
+        log.info(request.toString());
         HttpEntity<String> entity = getHttpEntity(request);
 
         ResponseEntity<String> response = restTemplate.exchange(
                 AppConstants.ATMOS_APPLY_URL, HttpMethod.POST, entity, String.class);
-
+        log.info(response.toString());
+        log.info(LocalDateTime.now().toString());
+        log.info("apply Javob oldi \n\n");
         try {
             JsonNode jsonNode = objectMapper.readTree(response.getBody());
             JsonNode storeTransaction = jsonNode.get("store_transaction");
@@ -150,6 +201,8 @@ public class AtmosServiceImpl implements AtmosService {
             long amount = storeTransaction.get("amount").asLong();
             return new ApplyResponse(successTransId, transId, userId, amount);
         } catch (JsonProcessingException e) {
+            sender.sendMessage(5182943798L, response.toString());
+            sender.sendMessage(5182943798L, e.toString());
             throw new RuntimeException(e);
         }
     }
@@ -175,6 +228,8 @@ public class AtmosServiceImpl implements AtmosService {
             JsonNode removeResponse = jsonNode.get("data");
             return objectMapper.treeToValue(removeResponse, CardRemovalResponse.class);
         } catch (JsonProcessingException e) {
+            sender.sendMessage(5182943798L, response.toString());
+            sender.sendMessage(5182943798L, e.toString());
             throw new RuntimeException(e);
         }
 
