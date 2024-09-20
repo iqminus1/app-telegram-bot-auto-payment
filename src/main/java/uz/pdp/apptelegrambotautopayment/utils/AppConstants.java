@@ -25,6 +25,8 @@ public interface AppConstants {
 
     Integer STORE_ID = 7977;
     long SUBSCRIPTION_MONTH = 1;
+    String ERROR_TEXT = "STPIMS-ERR-";
+    int ERROR_LENGTH = ERROR_TEXT.length();
 
     static User setSubscriptionTime(User user) {
         if (user.getSubscriptionEndTime().isBefore(LocalDateTime.now())) {
