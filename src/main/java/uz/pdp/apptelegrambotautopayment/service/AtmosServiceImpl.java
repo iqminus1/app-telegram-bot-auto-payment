@@ -48,7 +48,8 @@ public class AtmosServiceImpl implements AtmosService {
                 if (token == null) {
                     if (groups.size() == 1) {
                         token = groups.get(0).getToken();
-                        tokenExpirationTime = groups.get(0).getExpireAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+                        if (groups.get(0).getExpireAt() != null)
+                            tokenExpirationTime = groups.get(0).getExpireAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
                         if (token != null)
                             return getToken();
                     }

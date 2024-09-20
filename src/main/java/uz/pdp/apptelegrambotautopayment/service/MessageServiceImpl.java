@@ -183,11 +183,9 @@ public class MessageServiceImpl implements MessageService {
         if (!user.getMethod().equals(PaymentMethod.CARD)) {
             return;
         }
-        if (user.getCardToken() == null) {
-            return;
-        }
         CardRemovalResponse cardRemovalResponse = atmosService.removeCard(new CardRequest(user.getCardId(), user.getCardToken()));
-        if (cardRemovalResponse.getCardToken() != null) {
+        if (cardRemovalResponse.getErrorCode() != null) {
+            sender.sendMessage(userId, langService.getMessage(LangFields.EXCEPTION_ATMOS_TEXT, userId).formatted(cardRemovalResponse.getErrorMessage()));
             return;
         }
         user.setCardNumber(null);
@@ -214,11 +212,12 @@ public class MessageServiceImpl implements MessageService {
                 sender.sendMessage(userId, langService.getMessage(LangFields.EXCEPTION_ATMOS_TEXT, userId).formatted(confirmResponse.getErrorMessage()));
             return;
         }
+
         user.setCardToken(confirmResponse.getCardToken());
         user.setCardId(confirmResponse.getCardId());
         user.setCardPhone(confirmResponse.getPhone());
         user.setMethod(PaymentMethod.CARD);
-        temp.removeUser(user.getId());
+        temp.removeUser(userId);
         commonUtils.updateUser(user);
         userRepository.save(user);
         //card confirm end
@@ -321,22 +320,16 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private void sendAddCardNumberText(Long userId) {
-        if (commonUtils.getUser(userId).getMethod() != null) {
-            return;
-        }
         if (commonUtils.getUser(userId).getContactNumber() == null) {
             commonUtils.setState(userId, State.SENDING_CARD_NUMBER);
             sendContactNumber(userId);
             return;
         }
-        if (commonUtils.getUser(userId).getCardToken() != null)
+        if (commonUtils.getUser(userId).getMethod() != null) {
             return;
-        commonUtils.setState(userId, State.SENDING_CARD_NUMBER);
-        User user = temp.getUser(userId);
-        if (user != null) {
-            user.setCardNumber(null);
-            temp.setUser(user);
         }
+        commonUtils.setState(userId, State.SENDING_CARD_NUMBER);
+        temp.removeUser(userId);
         String message = langService.getMessage(LangFields.SEND_CARD_NUMBER_TEXT, userId);
         ReplyKeyboard replyKeyboard = buttonService.withString(List.of(langService.getMessage(LangFields.BACK_TEXT, userId)));
         sender.sendMessage(userId, message, replyKeyboard);
