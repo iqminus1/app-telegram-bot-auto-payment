@@ -56,7 +56,7 @@ public class ScheduledProcess {
     }
 
     //    @Scheduled(cron = "0 0 3 * * ?")
-    @Scheduled(fixedRate = 10, timeUnit = TimeUnit.SECONDS)
+    @Scheduled(fixedRate = 10, timeUnit = TimeUnit.MINUTES)
     public void getPayment() {
         //Save qivolib userlani keyin paymant yechiladi.
         //State tudum sudmlari o`zgarib ketmasligi uchun.
