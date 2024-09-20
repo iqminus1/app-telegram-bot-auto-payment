@@ -3,7 +3,6 @@ package uz.pdp.apptelegrambotautopayment.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import uz.pdp.apptelegrambotautopayment.dto.request.*;
@@ -57,7 +56,6 @@ public class MessageServiceImpl implements MessageService {
                             removeUserCard(userId);
                         } else if (langService.getMessage(LangFields.ADD_CARD_NUMBER_TEXT, userId).equals(text)) {
                             sendAddCardNumberText(userId);
-//                        sendWebAppForPayment(userId);
                         } else if (langService.getMessage(LangFields.BUTTON_PAYMENT_HISTORY_TEXT, userId).equals(text)) {
                             showPaymentHistory(userId);
                         } else if (langService.getMessage(LangFields.START_PAYMENT_TEXT, userId).equals(text)) {
@@ -80,12 +78,10 @@ public class MessageServiceImpl implements MessageService {
                             sendingCardExpire(userId, text);
                         }
                     }
-                    case SENDING_CARD_CODE -> {
-                        checkCardCode(userId, text);
-                    }
-                    case SENDING_CONTACT_NUMBER -> {
-                        start(userId);
-                    }
+                    case SENDING_CARD_CODE -> checkCardCode(userId, text);
+
+                    case SENDING_CONTACT_NUMBER -> start(userId);
+
                     case SELECT_LANGUAGE -> changeLanguage(text, userId);
                 }
             } else if (message.hasContact()) {
@@ -205,13 +201,6 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
-    private void sendWebAppForPayment(Long userId) {
-        String text = langService.getMessage(LangFields.FOR_ADD_CARD_NUMBER_TEXT, userId);
-        String buttonText = langService.getMessage(LangFields.ADD_CARD_TEXT, userId);
-        InlineKeyboardMarkup markup = buttonService.webAppKeyboard(buttonText, AppConstants.WEB_APP_URL.formatted(userId));
-        sender.sendMessage(userId, text, markup);
-    }
-
     private void sendingCardExpire(Long userId, String text) {
         if (text.matches("^(0[1-9]|1[0-2])(\\d{2}$)")) {
             User user = temp.getUser(userId);
@@ -233,29 +222,27 @@ public class MessageServiceImpl implements MessageService {
         commonUtils.setState(userId, State.SENDING_CARD_EXPIRE);
         User user = commonUtils.getUser(userId);
         if (text.matches("\\d{16}")) {
-            if (userRepository.existsByCardNumber(text)) {
-                sender.sendMessage(userId, langService.getMessage(LangFields.INVALID_CARD_NUMBER_TEXT, userId));
-                return;
-            }
-            user.setCardNumber(text);
-            temp.setUser(user);
-            sender.sendMessage(userId, langService.getMessage(LangFields.SEND_CARD_EXPIRE_TEXT, userId));
+            setCardAndSendMessage(userId, text, user);
             return;
         } else if (text.matches("\\d{4} \\d{4} \\d{4} \\d{4}")) {
             String formattedCardNumber = text.substring(0, 4) +
                     text.substring(5, 9) +
                     text.substring(10, 14) +
                     text.substring(15);
-            if (userRepository.existsByCardNumber(formattedCardNumber)) {
-                sender.sendMessage(userId, langService.getMessage(LangFields.INVALID_CARD_NUMBER_TEXT, userId));
-                return;
-            }
-            user.setCardNumber(formattedCardNumber);
-            temp.setUser(user);
-            sender.sendMessage(userId, langService.getMessage(LangFields.SEND_CARD_EXPIRE_TEXT, userId));
+            setCardAndSendMessage(userId, formattedCardNumber, user);
             return;
         }
         sender.sendMessage(userId, langService.getMessage(LangFields.EXCEPTION_CARD_NUMBER_TEXT, userId));
+    }
+
+    private void setCardAndSendMessage(Long userId, String formattedCardNumber, User user) {
+        if (userRepository.existsByCardNumber(formattedCardNumber)) {
+            sender.sendMessage(userId, langService.getMessage(LangFields.INVALID_CARD_NUMBER_TEXT, userId));
+            return;
+        }
+        user.setCardNumber(formattedCardNumber);
+        temp.setUser(user);
+        sender.sendMessage(userId, langService.getMessage(LangFields.SEND_CARD_EXPIRE_TEXT, userId));
     }
 
     private void sendAddCardNumberText(Long userId) {
@@ -295,11 +282,11 @@ public class MessageServiceImpl implements MessageService {
         sender.sendMessage(userId, langService.getMessage(LangFields.SUCCESSFULLY_CHANGED_LANGUAGE, lang.name()), buttonService.start(userId));
     }
 
-    private void selectLanguage(long userId) {
-        commonUtils.setState(userId, State.SELECT_LANGUAGE);
-        String message = langService.getMessage(LangFields.BUTTON_LANG_SETTINGS, userId);
-        sender.sendMessage(userId, message, buttonService.language(userId));
-    }
+//    private void selectLanguage(long userId) {
+//        commonUtils.setState(userId, State.SELECT_LANGUAGE);
+//        String message = langService.getMessage(LangFields.BUTTON_LANG_SETTINGS, userId);
+//        sender.sendMessage(userId, message, buttonService.language(userId));
+//    }
 
     private void start(Long userId) {
         User user = commonUtils.getUser(userId);

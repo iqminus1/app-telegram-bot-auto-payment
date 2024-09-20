@@ -10,8 +10,6 @@ public interface AppConstants {
     String START = "/start";
     Long PRICE = 1000L;
 
-    String WEB_APP_URL = "https://192.168.0.105:888/payment.html?userId=%s";
-
     //Auth Atmos
     String CLIENT_ID = "your_client_id";
     String CLIENT_SECRET = "your_client_secret";
