@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import uz.pdp.apptelegrambotautopayment.dto.request.CardRequest;
 import uz.pdp.apptelegrambotautopayment.dto.response.ApplyResponse;
 import uz.pdp.apptelegrambotautopayment.enums.LangFields;
 import uz.pdp.apptelegrambotautopayment.model.Group;
@@ -22,7 +21,6 @@ import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -63,7 +61,7 @@ public class ScheduledProcess {
             for (User user : users) {
                 Long userId = user.getId();
                 if (!sender.checkChatMember(userId, groupId)) {
-                    notChatMember(user);
+                    kickUserAndSendMessage(user, groupId, LangFields.NOT_CHAT_MEMBER_TEXT);
                 } else if (user.getCardToken() == null) {
                     kickUserAndSendMessage(user, groupId, LangFields.REMOVED_CARD_NUMBER_TEXT);
                 } else if (!user.isPayment()) {
@@ -101,20 +99,4 @@ public class ScheduledProcess {
 
     }
 
-    @Async
-    void notChatMember(User user) {
-        clearUser(user);
-        userRepository.save(user);
-        commonUtils.updateUser(user);
-        sender.sendMessage(user.getId(), langService.getMessage(LangFields.NOT_CHAT_MEMBER_TEXT, user.getId()));
-    }
-
-    private void clearUser(User user) {
-        atmosService.removeCard(new CardRequest(user.getCardId(), user.getCardToken()));
-        user.setSubscribed(false);
-        user.setCardToken(null);
-        user.setCardExpiry(null);
-        user.setCardId(null);
-        user.setCardNumber(null);
-    }
 }

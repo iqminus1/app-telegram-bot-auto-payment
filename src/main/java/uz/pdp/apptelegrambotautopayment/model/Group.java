@@ -6,6 +6,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Setter
@@ -18,4 +20,5 @@ public class Group {
     private Integer id;
     private Long groupId;
     private String token;
+    private LocalDateTime expireAt;
 }

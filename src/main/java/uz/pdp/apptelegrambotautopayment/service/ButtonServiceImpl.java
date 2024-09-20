@@ -10,6 +10,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo;
 import uz.pdp.apptelegrambotautopayment.enums.LangFields;
+import uz.pdp.apptelegrambotautopayment.enums.PaymentMethod;
+import uz.pdp.apptelegrambotautopayment.model.User;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 
 import java.util.ArrayList;
@@ -91,17 +93,34 @@ public class ButtonServiceImpl implements ButtonService {
 
     @Override
     public ReplyKeyboard start(Long userId) {
-        String message = langService.getMessage(LangFields.ADD_CARD_NUMBER_TEXT, userId);
-        if (commonUtils.getUser(userId).getCardToken() != null) {
-            message = langService.getMessage(LangFields.REMOVE_CARD_NUMBER_TEXT, userId);
+        User user = commonUtils.getUser(userId);
+        List<String> list = new LinkedList<>();
+
+        if (commonUtils.getUser(userId).getAdmin() != 0) {
+            list.add(langService.getMessage(LangFields.ADMIN_MENU_TEXT,userId));
         }
+
+        //card button
+        if (user.getMethod() == null || user.getMethod().equals(PaymentMethod.CARD)) {
+            String message = langService.getMessage(LangFields.ADD_CARD_NUMBER_TEXT, userId);
+            if (user.getCardToken() != null) {
+                message = langService.getMessage(LangFields.REMOVE_CARD_NUMBER_TEXT, userId);
+            }
+            list.add(message);
+        }
+        //transfer button
+        if (user.getMethod() == null || user.getMethod().equals(PaymentMethod.TRANSFER)) {
+            list.add(langService.getMessage(LangFields.TRANSFER_BUTTON, userId));
+        }
+
         String history = langService.getMessage(LangFields.BUTTON_PAYMENT_HISTORY_TEXT, userId);
+
+        //payment status
         String paymentStatus = langService.getMessage(LangFields.START_PAYMENT_TEXT, userId);
-        if (commonUtils.getUser(userId).isPayment())
+        if (user.isPayment()) {
             paymentStatus = langService.getMessage(LangFields.STOP_PAYMENT_TEXT, userId);
+        }
 //        String changeLang = langService.getMessage(LangFields.BUTTON_LANG_SETTINGS, userId);
-        List<String > list = new LinkedList<>();
-        list.add(message);
         list.add(history);
         list.add(paymentStatus);
         return withString(list);

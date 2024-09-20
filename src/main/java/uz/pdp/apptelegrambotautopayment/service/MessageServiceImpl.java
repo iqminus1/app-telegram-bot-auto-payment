@@ -9,6 +9,7 @@ import uz.pdp.apptelegrambotautopayment.dto.request.*;
 import uz.pdp.apptelegrambotautopayment.dto.response.*;
 import uz.pdp.apptelegrambotautopayment.enums.Lang;
 import uz.pdp.apptelegrambotautopayment.enums.LangFields;
+import uz.pdp.apptelegrambotautopayment.enums.PaymentMethod;
 import uz.pdp.apptelegrambotautopayment.enums.State;
 import uz.pdp.apptelegrambotautopayment.model.Group;
 import uz.pdp.apptelegrambotautopayment.model.Transaction;
@@ -63,6 +64,8 @@ public class MessageServiceImpl implements MessageService {
                             startPayment(userId);
                         } else if (langService.getMessage(LangFields.STOP_PAYMENT_TEXT, userId).equals(text)) {
                             stopPayment(userId);
+                        } else if (langService.getMessage(LangFields.TRANSFER_BUTTON, userId).equals(text)) {
+                            sendTransferContactNumber(userId);
                         }
                     }
                     case SENDING_CARD_NUMBER -> {
@@ -95,6 +98,12 @@ public class MessageServiceImpl implements MessageService {
                     checkContact(message);
             }
         }
+    }
+
+    private void sendTransferContactNumber(Long userId) {
+        PaymentMethod method = commonUtils.getUser(userId).getMethod();
+        if (method == null || method.equals(PaymentMethod.TRANSFER))
+            sender.sendMessage(userId, langService.getMessage(LangFields.CONTACT_TRANSFER_TEXT, userId));
     }
 
     private void stopPayment(Long userId) {
@@ -171,6 +180,9 @@ public class MessageServiceImpl implements MessageService {
 
     private void removeUserCard(Long userId) {
         User user = commonUtils.getUser(userId);
+        if (!user.getMethod().equals(PaymentMethod.CARD)) {
+            return;
+        }
         if (user.getCardToken() == null) {
             return;
         }
@@ -182,6 +194,8 @@ public class MessageServiceImpl implements MessageService {
         user.setCardId(null);
         user.setCardExpiry(null);
         user.setCardToken(null);
+        user.setCardPhone(null);
+        user.setMethod(null);
         userRepository.save(user);
         commonUtils.updateUser(user);
         sender.sendMessage(userId, langService.getMessage(LangFields.CARD_NUMBER_DELETED_TEXT, userId), buttonService.start(userId));
@@ -199,6 +213,7 @@ public class MessageServiceImpl implements MessageService {
         user.setCardToken(confirmResponse.getCardToken());
         user.setCardId(confirmResponse.getCardId());
         user.setCardPhone(confirmResponse.getPhone());
+        user.setMethod(PaymentMethod.CARD);
         temp.removeUser(user.getId());
         commonUtils.updateUser(user);
         userRepository.save(user);
@@ -292,6 +307,9 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private void sendAddCardNumberText(Long userId) {
+        if (commonUtils.getUser(userId).getMethod() != null) {
+            return;
+        }
         if (commonUtils.getUser(userId).getContactNumber() == null) {
             commonUtils.setState(userId, State.SENDING_CARD_NUMBER);
             sendContactNumber(userId);

@@ -9,6 +9,8 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Date;
+
 @EnableScheduling
 @SpringBootApplication
 public class AppTelegramBotAutoPaymentApplication {

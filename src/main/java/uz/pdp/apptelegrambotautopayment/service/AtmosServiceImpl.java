@@ -20,7 +20,9 @@ import uz.pdp.apptelegrambotautopayment.repository.GroupRepository;
 import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +48,9 @@ public class AtmosServiceImpl implements AtmosService {
                 if (token == null) {
                     if (groups.size() == 1) {
                         token = groups.get(0).getToken();
+                        tokenExpirationTime = groups.get(0).getExpireAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+                        if (token != null)
+                            return getToken();
                     }
                 }
                 HttpHeaders headers = new HttpHeaders();
@@ -71,6 +76,7 @@ public class AtmosServiceImpl implements AtmosService {
                         if (groups.size() == 1) {
                             Group group = groups.get(0);
                             group.setToken(token);
+                            group.setExpireAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(tokenExpirationTime), ZoneId.systemDefault()));
                             groupRepository.save(group);
                         }
                     }
