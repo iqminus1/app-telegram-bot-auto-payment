@@ -13,6 +13,7 @@ import uz.pdp.apptelegrambotautopayment.enums.LangFields;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -97,9 +98,13 @@ public class ButtonServiceImpl implements ButtonService {
         String history = langService.getMessage(LangFields.BUTTON_PAYMENT_HISTORY_TEXT, userId);
         String paymentStatus = langService.getMessage(LangFields.START_PAYMENT_TEXT, userId);
         if (commonUtils.getUser(userId).isPayment())
-            message = langService.getMessage(LangFields.STOP_PAYMENT_TEXT, userId);
+            paymentStatus = langService.getMessage(LangFields.STOP_PAYMENT_TEXT, userId);
 //        String changeLang = langService.getMessage(LangFields.BUTTON_LANG_SETTINGS, userId);
-        return withString(List.of(message, history, paymentStatus));
+        List<String > list = new LinkedList<>();
+        list.add(message);
+        list.add(history);
+        list.add(paymentStatus);
+        return withString(list);
     }
 
     @Override

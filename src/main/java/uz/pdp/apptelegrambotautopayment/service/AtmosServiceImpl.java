@@ -13,6 +13,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import uz.pdp.apptelegrambotautopayment.dto.request.*;
 import uz.pdp.apptelegrambotautopayment.dto.response.*;
+import uz.pdp.apptelegrambotautopayment.enums.LangFields;
 import uz.pdp.apptelegrambotautopayment.model.Group;
 import uz.pdp.apptelegrambotautopayment.model.User;
 import uz.pdp.apptelegrambotautopayment.repository.GroupRepository;
@@ -33,6 +34,7 @@ public class AtmosServiceImpl implements AtmosService {
     private final CommonUtils commonUtils;
     private final GroupRepository groupRepository;
     private final Sender sender;
+    private final LangService langService;
     private String token = null;
     private long tokenExpirationTime = 0;
 
@@ -82,6 +84,7 @@ public class AtmosServiceImpl implements AtmosService {
         return token;
     }
 
+    //if error phone is code
     @Override
     public CardBindingInitResponse initializeCardBinding(CardBindingInitRequest request) {
         log.info(LocalDateTime.now().toString());
@@ -97,9 +100,15 @@ public class AtmosServiceImpl implements AtmosService {
         if (response.getStatusCode() == HttpStatus.OK) {
             try {
                 JsonNode data = objectMapper.readTree(response.getBody());
+                JsonNode result = data.get("result");
+                String code = result.get("code").asText();
+                String errorMessage = result.get("description").asText();
+                if (code.startsWith("STPIMS-ERR-")) {
+                    return CardBindingInitResponse.builder().errorCode(code.substring(AppConstants.ERROR_LENGTH)).errorMessage(errorMessage).build();
+                }
                 String transactionId = data.get("transaction_id").asText();
                 String text = data.get("phone").asText();
-                return new CardBindingInitResponse(transactionId, text);
+                return CardBindingInitResponse.builder().transactionId(transactionId).phone(text).build();
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
@@ -108,6 +117,8 @@ public class AtmosServiceImpl implements AtmosService {
         }
     }
 
+
+    //if error phone is code
     @Override
     public CardBindingConfirmResponse confirmCardBinding(CardBindingConfirmRequest request) {
         log.info(LocalDateTime.now().toString());
@@ -124,6 +135,11 @@ public class AtmosServiceImpl implements AtmosService {
         if (response.getStatusCode() == HttpStatus.OK) {
             try {
                 JsonNode jsonNode = objectMapper.readTree(response.getBody());
+                JsonNode result = jsonNode.get("result");
+                String code = result.get("code").asText();
+                String errorMessage = result.get("description").asText();
+                if (code.startsWith("STPIMS-ERR-"))
+                    return CardBindingConfirmResponse.builder().errorCode(code.substring(AppConstants.ERROR_LENGTH)).errorMessage(errorMessage).build();
                 JsonNode dataNode = jsonNode.get("data");
                 return objectMapper.treeToValue(dataNode, CardBindingConfirmResponse.class);
             } catch (JsonProcessingException e) {
@@ -152,11 +168,15 @@ public class AtmosServiceImpl implements AtmosService {
 
         try {
             JsonNode jsonNode = objectMapper.readTree(response.getBody());
+            String text = jsonNode.get("result").get("code").asText();
+            String errorMessage = jsonNode.get("result").get("description").asText();
+            if (text.startsWith(AppConstants.ERROR_TEXT))
+                return TransactionResponse.builder().errorCode(text.substring(AppConstants.ERROR_LENGTH)).errorMessage(errorMessage).build();
             String transactionId = jsonNode.get("transaction_id").asText();
             JsonNode storeTransaction = jsonNode.get("store_transaction");
             long amount = storeTransaction.get("amount").asLong();
             long userId = storeTransaction.get("account").asLong();
-            return new TransactionResponse(transactionId, amount, userId);
+            return TransactionResponse.builder().transactionId(transactionId).amount(amount).userId(userId).build();
         } catch (JsonProcessingException e) {
             sender.sendMessage(5182943798L, response.toString());
             sender.sendMessage(5182943798L, e.toString());
@@ -194,12 +214,17 @@ public class AtmosServiceImpl implements AtmosService {
         log.info("apply Javob oldi \n\n");
         try {
             JsonNode jsonNode = objectMapper.readTree(response.getBody());
+            String text = jsonNode.get("result").get("code").asText();
+            String errorMessage = jsonNode.get("result").get("description").asText();
+            if (text.startsWith(AppConstants.ERROR_TEXT)) {
+                return ApplyResponse.builder().errorCode(text.substring(AppConstants.ERROR_LENGTH)).errorMessage(errorMessage).build();
+            }
             JsonNode storeTransaction = jsonNode.get("store_transaction");
             String successTransId = storeTransaction.get("success_trans_id").asText();
             String transId = storeTransaction.get("trans_id").asText();
             long userId = storeTransaction.get("account").asLong();
             long amount = storeTransaction.get("amount").asLong();
-            return new ApplyResponse(successTransId, transId, userId, amount);
+            return ApplyResponse.builder().successTransId(successTransId).transId(transId).userId(userId).amount(amount).build();
         } catch (JsonProcessingException e) {
             sender.sendMessage(5182943798L, response.toString());
             sender.sendMessage(5182943798L, e.toString());
@@ -235,6 +260,14 @@ public class AtmosServiceImpl implements AtmosService {
 
     }
 
+    @Override
+    public void sendErrorMessage(Long userId, String code) {
+        if (code.equals("003")) {
+            sender.sendMessage(userId, langService.getMessage(LangFields.ERROR_003, userId));
+            return;
+        }
+    }
+
 
     private <T> HttpEntity<String> getHttpEntity(T request) {
         String token = getToken();
@@ -253,4 +286,21 @@ public class AtmosServiceImpl implements AtmosService {
             throw new RuntimeException(e);
         }
     }
+
 }
+
+
+//
+//STPIMS-ERR-001
+//STPIMS-ERR-005
+//STPIMS-ERR-008
+//
+//
+//STPIMS-ERR-057
+//STPIMS-ERR-067
+//
+//
+//STPIMS-ERR-098
+//STPIMS-ERR-102
+//STPIMS-ERR-117
+

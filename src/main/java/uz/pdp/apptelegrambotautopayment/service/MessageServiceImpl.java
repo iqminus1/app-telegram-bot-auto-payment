@@ -21,6 +21,7 @@ import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 import uz.pdp.apptelegrambotautopayment.utils.Temp;
 
 import java.text.DecimalFormat;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -78,7 +79,12 @@ public class MessageServiceImpl implements MessageService {
                             sendingCardExpire(userId, text);
                         }
                     }
-                    case SENDING_CARD_CODE -> checkCardCode(userId, text);
+                    case SENDING_CARD_CODE -> {
+                        if (text.matches("\\d"))
+                            checkCardCode(userId, text);
+                        else
+                            sender.sendMessage(userId, langService.getMessage(LangFields.SEND_OTP_TEXT, userId));
+                    }
 
                     case SENDING_CONTACT_NUMBER -> start(userId);
 
@@ -98,7 +104,7 @@ public class MessageServiceImpl implements MessageService {
         user.setPayment(false);
         userRepository.save(user);
         commonUtils.updateUser(user);
-        sender.sendMessage(userId, langService.getMessage(LangFields.PAYMENT_IS_STOPPED_TEXT, userId));
+        sender.sendMessage(userId, langService.getMessage(LangFields.PAYMENT_IS_STOPPED_TEXT, userId), buttonService.start(userId));
     }
 
     private void startPayment(Long userId) {
@@ -110,9 +116,18 @@ public class MessageServiceImpl implements MessageService {
         if (user.isPayment())
             return;
         user.setPayment(true);
+        boolean b = false;
+        if (user.getSubscriptionEndTime().isBefore(LocalDateTime.now())) {
+            AppConstants.setSubscriptionTime(user);
+            b = true;
+        }
         userRepository.save(user);
         commonUtils.updateUser(user);
-        sender.sendMessage(userId, langService.getMessage(LangFields.PAYMENT_IS_STARTED_TEXT, userId));
+        sender.sendMessage(userId, langService.getMessage(LangFields.PAYMENT_IS_STARTED_TEXT, userId), buttonService.start(userId));
+        List<Group> groups = groupRepository.findAll();
+        if (b)
+            if (groups.size() == 1 && groups.get(0).getGroupId() != null)
+                sender.sendMessage(userId, langService.getMessage(LangFields.PAYMENT_IS_STARTED_AND_PAID_THE_GROUP, userId) + sender.getLink(groups.get(0).getGroupId()));
     }
 
     private void showPaymentHistory(Long userId) {
@@ -121,6 +136,7 @@ public class MessageServiceImpl implements MessageService {
             sender.sendMessage(userId, langService.getMessage(LangFields.EMPTY_PAYMENT_HISTORY_TEXT, userId));
             return;
         }
+        DecimalFormat decimalFormat = new DecimalFormat("###,###,###");
         int i = 0;
         StringBuilder sb = new StringBuilder();
         int size = transactions.size();
@@ -129,16 +145,12 @@ public class MessageServiceImpl implements MessageService {
             sb.append(size - i++).append(". ")
                     .append(transaction.getPayAt().toLocalDate()).append(" ")
                     .append(transaction.getPayAt().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss")))
-                    .append(" - ").append(formatLong(transaction.getAmount() / 100)).append(" ").append(som).append("\n");
+                    .append(" - ").append(decimalFormat.format(transaction.getAmount() / 100)).append(" ").append(som).append("\n");
         }
         String message = langService.getMessage(LangFields.LIST_PAYMENT_HISTORY_TEXT, userId);
         sender.sendMessage(userId, message + sb);
     }
 
-    public String formatLong(long number) {
-        DecimalFormat df = new DecimalFormat("###,###,###.00");
-        return df.format(number).replace(',', '.').replace('.', ',');
-    }
 
     private void checkContact(Message message) {
         Long userId = message.getFrom().getId();
@@ -177,28 +189,58 @@ public class MessageServiceImpl implements MessageService {
 
     private void checkCardCode(Long userId, String text) {
         User user = temp.getUser(userId);
-        CardBindingConfirmResponse cardBindingConfirmResponse = atmosService.confirmCardBinding(new CardBindingConfirmRequest(text, user.getTransactionId()));
-        user.setCardToken(cardBindingConfirmResponse.getCardToken());
-        user.setCardId(cardBindingConfirmResponse.getCardId());
-        commonUtils.updateUser(user);
-        TransactionResponse transaction = atmosService.createTransaction(new TransactionRequest(userId));
-        String transactionId = transaction.getTransactionId();
-        atmosService.preApplyPayment(new PreApplyRequest(transactionId, user.getCardToken()));
-        ApplyResponse applyResponse = atmosService.applyPayment(new ApplyRequest(transactionId));
-        if (applyResponse.getSuccessTransId() != null) {
-            sender.sendMessage(userId, langService.getMessage(LangFields.YOU_PAID_TEXT, userId));
-            transactionRepository.save(new Transaction(applyResponse));
-            AppConstants.setSubscriptionTime(user);
-            user.setState(State.START);
-            user.setPayment(true);
-            userRepository.save(user);
-            commonUtils.updateUser(user);
-            List<Group> groups = groupRepository.findAll();
-            if (groups.size() == 1) {
-                String link = sender.getLink(groups.get(0).getGroupId());
-                sender.sendMessage(userId, langService.getMessage(LangFields.SEND_VALID_ORDER_TEXT, userId) + link, buttonService.start(userId));
-            }
+
+        //card confirm start
+        CardBindingConfirmResponse confirmResponse = atmosService.confirmCardBinding(new CardBindingConfirmRequest(text, user.getTransactionId()));
+        if (confirmResponse.getErrorMessage() != null) {
+            exceptionAtmos(userId, confirmResponse.getErrorMessage());
+            return;
         }
+        user.setCardToken(confirmResponse.getCardToken());
+        user.setCardId(confirmResponse.getCardId());
+        user.setCardPhone(confirmResponse.getPhone());
+        temp.removeUser(user.getId());
+        commonUtils.updateUser(user);
+        userRepository.save(user);
+        //card confirm end
+
+        //transaction create start
+        TransactionResponse transaction = atmosService.createTransaction(new TransactionRequest(userId));
+        if (transaction.getErrorMessage() != null) {
+            exceptionAtmos(userId, transaction.getErrorMessage());
+            return;
+        }
+        String transactionId = transaction.getTransactionId();
+        //transaction create end
+
+        //pre apply
+        atmosService.preApplyPayment(new PreApplyRequest(transactionId, user.getCardToken()));
+
+        //apply start
+        ApplyResponse applyResponse = atmosService.applyPayment(new ApplyRequest(transactionId));
+        if (applyResponse.getErrorMessage() != null) {
+            exceptionAtmos(userId, applyResponse.getErrorMessage());
+            return;
+        }
+        sender.sendMessage(userId, langService.getMessage(LangFields.YOU_PAID_TEXT, userId));
+        transactionRepository.save(new Transaction(applyResponse));
+        AppConstants.setSubscriptionTime(user);
+        user.setState(State.START);
+        user.setPayment(true);
+        userRepository.save(user);
+        commonUtils.updateUser(user);
+        List<Group> groups = groupRepository.findAll();
+        if (groups.size() == 1) {
+            String link = sender.getLink(groups.get(0).getGroupId());
+            sender.sendMessage(userId, langService.getMessage(LangFields.SEND_VALID_ORDER_TEXT, userId) + link, buttonService.start(userId));
+        }
+        //apply end
+    }
+
+    private void exceptionAtmos(Long userId, String errorMessage) {
+        temp.removeUser(userId);
+        commonUtils.setState(userId, State.START);
+        sender.sendMessage(userId, errorMessage, buttonService.start(userId));
     }
 
     private void sendingCardExpire(Long userId, String text) {
@@ -210,8 +252,12 @@ public class MessageServiceImpl implements MessageService {
             if (cardBindingInitResponse.getTransactionId() != null) {
                 user.setCardExpiry(text);
                 user.setTransactionId(cardBindingInitResponse.getTransactionId());
+                user.setCardPhone(cardBindingInitResponse.getPhone());
                 temp.setUser(user);
                 sender.sendMessage(userId, langService.getMessage(LangFields.SEND_CARD_CODE_TEXT, userId).formatted(cardBindingInitResponse.getPhone()), new ReplyKeyboardRemove(true));
+            }
+            if (cardBindingInitResponse.getErrorMessage() != null) {
+                sender.sendMessage(userId, cardBindingInitResponse.getErrorMessage());
             }
             return;
         }

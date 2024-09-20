@@ -30,7 +30,7 @@ public class CommonUtils {
     }
 
     public State getState(Long userId) {
-        return users.get(userId).getState();
+        return getUser(userId).getState();
     }
 
     public void setState(Long userId, State state) {

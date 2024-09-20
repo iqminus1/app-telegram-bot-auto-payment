@@ -11,5 +11,7 @@ import java.util.List;
 public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAllBySubscribedAndSubscriptionEndTimeIsBefore(boolean subscribed, LocalDateTime subscriptionEndTime);
 
+    List<User> findAllBySubscribedAndSubscriptionEndTimeIsBetween(boolean subscribed, LocalDateTime start, LocalDateTime end);
+
     boolean existsByCardNumber(String cardNumber);
 }

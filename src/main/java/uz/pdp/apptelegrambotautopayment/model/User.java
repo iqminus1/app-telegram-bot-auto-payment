@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.*;
 import uz.pdp.apptelegrambotautopayment.enums.Lang;
+import uz.pdp.apptelegrambotautopayment.enums.PaymentMethod;
 import uz.pdp.apptelegrambotautopayment.enums.State;
 
 import java.time.LocalDateTime;
@@ -29,9 +30,11 @@ public class User {
 
     private String transactionId;
 
+    private Long cardId;
+
     private String cardToken;
 
-    private Long cardId;
+    private String cardPhone;
 
     private String contactNumber;
 
@@ -40,4 +43,8 @@ public class User {
     private LocalDateTime subscriptionEndTime;
 
     private boolean payment;
+
+    private int admin;
+
+    private PaymentMethod method;
 }
