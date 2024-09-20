@@ -12,6 +12,7 @@ import org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo;
 import uz.pdp.apptelegrambotautopayment.enums.LangFields;
 import uz.pdp.apptelegrambotautopayment.enums.PaymentMethod;
 import uz.pdp.apptelegrambotautopayment.model.User;
+import uz.pdp.apptelegrambotautopayment.repository.TransactionRepository;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import java.util.Map;
 public class ButtonServiceImpl implements ButtonService {
     private final LangService langService;
     private final CommonUtils commonUtils;
+    private final TransactionRepository transactionRepository;
 
     @Override
     public ReplyKeyboard withString(List<String> list, int rowSize) {
@@ -113,16 +115,18 @@ public class ButtonServiceImpl implements ButtonService {
             list.add(langService.getMessage(LangFields.TRANSFER_BUTTON, userId));
         }
 
-        String history = langService.getMessage(LangFields.BUTTON_PAYMENT_HISTORY_TEXT, userId);
+        if (user.isSubscribed()){
+            String history = langService.getMessage(LangFields.BUTTON_PAYMENT_HISTORY_TEXT, userId);
 
-        //payment status
-        String paymentStatus = langService.getMessage(LangFields.START_PAYMENT_TEXT, userId);
-        if (user.isPayment()) {
-            paymentStatus = langService.getMessage(LangFields.STOP_PAYMENT_TEXT, userId);
+            //payment status
+            String paymentStatus = langService.getMessage(LangFields.START_PAYMENT_TEXT, userId);
+            if (user.isPayment()) {
+                paymentStatus = langService.getMessage(LangFields.STOP_PAYMENT_TEXT, userId);
+            }
+            list.add(history);
+            list.add(paymentStatus);
         }
 //        String changeLang = langService.getMessage(LangFields.BUTTON_LANG_SETTINGS, userId);
-        list.add(history);
-        list.add(paymentStatus);
         return withString(list);
     }
 
