@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
     List<Transaction> findAllByUserIdOrderByPayAtDesc(Long userId);
+
+    boolean existsByUserId(Long userId);
 }

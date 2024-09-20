@@ -13,14 +13,17 @@ import uz.pdp.apptelegrambotautopayment.repository.GroupRepository;
 import uz.pdp.apptelegrambotautopayment.repository.TransactionRepository;
 import uz.pdp.apptelegrambotautopayment.repository.UserRepository;
 import uz.pdp.apptelegrambotautopayment.service.AtmosService;
+import uz.pdp.apptelegrambotautopayment.service.ButtonService;
 import uz.pdp.apptelegrambotautopayment.service.LangService;
 import uz.pdp.apptelegrambotautopayment.service.Sender;
 import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -32,22 +35,28 @@ public class ScheduledProcess {
     private final TransactionRepository transactionRepository;
     private final CommonUtils commonUtils;
     private final LangService langService;
+    private final ButtonService buttonService;
 
     @Async
     public void rememberPayment() {
         LocalDateTime now = LocalDateTime.now();
+        LocalDate localDate = now.toLocalDate();
         List<User> users = userRepository.findAllBySubscribedAndSubscriptionEndTimeIsBetween(true, now, LocalDateTime.now().plusDays(4));
         for (User user : users) {
-            long day = ChronoUnit.DAYS.between(now, user.getSubscriptionEndTime());
+            long day = ChronoUnit.DAYS.between(localDate, user.getSubscriptionEndTime().toLocalDate());
             if (day == 0) {
                 continue;
-
             }
-            sender.sendMessage(user.getId(), langService.getMessage(LangFields.REMEMBER_PAYMENT_TEXT, user.getId()).formatted(day));
+            if (user.getCardToken() != null)
+                sender.sendMessage(user.getId(), langService.getMessage(LangFields.REMEMBER_PAYMENT_TEXT, user.getId()).formatted(day));
+            else
+                sender.sendMessage(user.getId(), langService.getMessage(LangFields.REMEMBER_PAYMENT_NO_CARD_TEXT, user.getId()).formatted(day), buttonService.start(user.getId()));
+
         }
     }
 
-    @Scheduled(cron = "0 0 3 * * ?")
+    //    @Scheduled(cron = "0 0 3 * * ?")
+    @Scheduled(fixedRate = 10, timeUnit = TimeUnit.MINUTES)
     public void getPayment() {
         //Save qivolib userlani keyin paymant yechiladi.
         //State tudum sudmlari o`zgarib ketmasligi uchun.

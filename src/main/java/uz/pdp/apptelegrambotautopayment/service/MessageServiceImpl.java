@@ -83,10 +83,10 @@ public class MessageServiceImpl implements MessageService {
                         }
                     }
                     case SENDING_CARD_CODE -> {
-                        if (text.matches("\\d"))
+                        if (text.matches("\\d{1,}"))
                             checkCardCode(userId, text);
                         else
-                            sender.sendMessage(userId, langService.getMessage(LangFields.SEND_OTP_TEXT, userId));
+                            sender.sendMessage(userId, langService.getMessage(LangFields.SEND_OTP_NOT_DIGIT_TEXT, userId));
                     }
 
                     case SENDING_CONTACT_NUMBER -> start(userId);
@@ -207,7 +207,11 @@ public class MessageServiceImpl implements MessageService {
         //card confirm start
         CardBindingConfirmResponse confirmResponse = atmosService.confirmCardBinding(new CardBindingConfirmRequest(text, user.getTransactionId()));
         if (confirmResponse.getErrorMessage() != null) {
-            exceptionAtmos(userId, confirmResponse.getErrorMessage());
+//            exceptionAtmos(userId, confirmResponse.getErrorMessage());
+            if (confirmResponse.getErrorCode().equals("098"))
+                sender.sendMessage(userId, langService.getMessage(LangFields.SEND_OTP_TEXT, userId));
+            else
+                sender.sendMessage(userId, langService.getMessage(LangFields.EXCEPTION_ATMOS_TEXT, userId).formatted(confirmResponse.getErrorMessage()));
             return;
         }
         user.setCardToken(confirmResponse.getCardToken());
@@ -219,10 +223,17 @@ public class MessageServiceImpl implements MessageService {
         userRepository.save(user);
         //card confirm end
 
+        if (user.getSubscriptionEndTime().isAfter(LocalDateTime.now())) {
+            commonUtils.setState(userId, State.START);
+            sender.sendMessage(userId, langService.getMessage(LangFields.DONT_END_PERMISSION_TEXT, userId).formatted(user.getSubscriptionEndTime().toLocalDate().plusDays(1)), buttonService.start(userId));
+            return;
+        }
+
         //transaction create start
         TransactionResponse transaction = atmosService.createTransaction(new TransactionRequest(userId));
         if (transaction.getErrorMessage() != null) {
             exceptionAtmos(userId, transaction.getErrorMessage());
+            sendAddCardNumberText(userId);
             return;
         }
         String transactionId = transaction.getTransactionId();
@@ -235,6 +246,7 @@ public class MessageServiceImpl implements MessageService {
         ApplyResponse applyResponse = atmosService.applyPayment(new ApplyRequest(transactionId));
         if (applyResponse.getErrorMessage() != null) {
             exceptionAtmos(userId, applyResponse.getErrorMessage());
+            sendAddCardNumberText(userId);
             return;
         }
         sender.sendMessage(userId, langService.getMessage(LangFields.YOU_PAID_TEXT, userId));
@@ -255,24 +267,26 @@ public class MessageServiceImpl implements MessageService {
     private void exceptionAtmos(Long userId, String errorMessage) {
         temp.removeUser(userId);
         commonUtils.setState(userId, State.START);
-        sender.sendMessage(userId, errorMessage, buttonService.start(userId));
+        sender.sendMessage(userId, langService.getMessage(LangFields.EXCEPTION_ATMOS_TEXT, userId).formatted(errorMessage), buttonService.start(userId));
     }
 
     private void sendingCardExpire(Long userId, String text) {
         if (text.matches("^(0[1-9]|1[0-2])(\\d{2}$)")) {
             User user = temp.getUser(userId);
-            commonUtils.setState(userId, State.SENDING_CARD_CODE);
             String str = text.substring(2) + text.substring(0, 2);
             CardBindingInitResponse cardBindingInitResponse = atmosService.initializeCardBinding(new CardBindingInitRequest(user.getCardNumber(), str));
             if (cardBindingInitResponse.getTransactionId() != null) {
+                commonUtils.setState(userId, State.SENDING_CARD_CODE);
                 user.setCardExpiry(text);
                 user.setTransactionId(cardBindingInitResponse.getTransactionId());
                 user.setCardPhone(cardBindingInitResponse.getPhone());
                 temp.setUser(user);
                 sender.sendMessage(userId, langService.getMessage(LangFields.SEND_CARD_CODE_TEXT, userId).formatted(cardBindingInitResponse.getPhone()), new ReplyKeyboardRemove(true));
+                return;
             }
             if (cardBindingInitResponse.getErrorMessage() != null) {
-                sender.sendMessage(userId, cardBindingInitResponse.getErrorMessage());
+                exceptionAtmos(userId, cardBindingInitResponse.getErrorMessage());
+                sendAddCardNumberText(userId);
             }
             return;
         }
