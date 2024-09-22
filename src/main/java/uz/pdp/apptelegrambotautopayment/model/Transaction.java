@@ -39,6 +39,6 @@ public class Transaction {
         this.transId = applyResponse.getTransId();
         this.successTransId = applyResponse.getSuccessTransId();
         this.payAt = LocalDateTime.now();
-        this.method = PaymentMethod.CARD;
+        this.method = PaymentMethod.PAYMENT;
     }
 }

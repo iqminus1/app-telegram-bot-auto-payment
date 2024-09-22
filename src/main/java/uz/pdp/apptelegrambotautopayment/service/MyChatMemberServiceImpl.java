@@ -28,7 +28,7 @@ public class MyChatMemberServiceImpl implements MyChatMemberService {
         boolean hasPermission = ChatMemberOwner.STATUS.equals(newStatus) || ChatMemberAdministrator.STATUS.equals(newStatus);
         if (groups.isEmpty()) {
             if (hasPermission) {
-                groupRepository.save(new Group(null, groupId, null,null));
+                groupRepository.save(Group.builder().groupId(groupId).build());
             }
         } else if (groups.size() == 1) {
             Group group = groups.get(0);

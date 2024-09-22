@@ -66,6 +66,8 @@ public class MessageServiceImpl implements MessageService {
                             stopPayment(userId);
                         } else if (langService.getMessage(LangFields.TRANSFER_BUTTON, userId).equals(text)) {
                             sendTransferContactNumber(userId);
+                        } else if (langService.getMessage(LangFields.PAY_CARD_NUMBER_TEXT, userId).equals(text)) {
+                            sendPayCardNumber(userId);
                         }
                     }
                     case SENDING_CARD_NUMBER -> {
@@ -89,6 +91,11 @@ public class MessageServiceImpl implements MessageService {
                             sender.sendMessage(userId, langService.getMessage(LangFields.SEND_OTP_NOT_DIGIT_TEXT, userId));
                     }
 
+                    case PAY_CARD_NUMBER -> {
+                        if (text.equals(langService.getMessage(LangFields.BACK_TEXT, userId)))
+                            start(userId);
+                    }
+
                     case SENDING_CONTACT_NUMBER -> start(userId);
 
                     case SELECT_LANGUAGE -> changeLanguage(text, userId);
@@ -96,11 +103,38 @@ public class MessageServiceImpl implements MessageService {
             } else if (message.hasContact()) {
                 if (commonUtils.getState(message.getFrom().getId()).equals(State.SENDING_CONTACT_NUMBER))
                     checkContact(message);
+            } else if (message.hasPhoto()) {
+                if (commonUtils.getState(message.getFrom().getId()).equals(State.PAY_CARD_NUMBER))
+                    savePhoto(message);
             }
         }
     }
 
+    private void savePhoto(Message message) {
+
+    }
+
+    private void sendPayCardNumber(Long userId) {
+        if (!AppConstants.IS_CARD)
+            return;
+
+        PaymentMethod method = commonUtils.getUser(userId).getMethod();
+        if (method == null || method.equals(PaymentMethod.CARD)) {
+            String text = langService.getMessage(LangFields.ADMIN_CARD_NUMBER_TEXT, userId);
+            String price = new DecimalFormat("###,###,###").format(AppConstants.PRICE);
+            String som = langService.getMessage(LangFields.SOM_TEXT, userId);
+            String withCardNumber = text.formatted(AppConstants.CARD_NAME, AppConstants.CARD_NUMBER, (price + " " + som));
+            ReplyKeyboard backButton = buttonService.withString(List.of(langService.getMessage(LangFields.BACK_TEXT, userId)));
+            sender.sendMessageWithMarkdown(userId, withCardNumber, backButton);
+            commonUtils.setState(userId, State.PAY_CARD_NUMBER);
+        }
+
+    }
+
     private void sendTransferContactNumber(Long userId) {
+        if (!AppConstants.IS_TRANSFER)
+            return;
+
         PaymentMethod method = commonUtils.getUser(userId).getMethod();
         if (method == null || method.equals(PaymentMethod.TRANSFER))
             sender.sendMessage(userId, langService.getMessage(LangFields.CONTACT_TRANSFER_TEXT, userId));
@@ -180,7 +214,7 @@ public class MessageServiceImpl implements MessageService {
 
     private void removeUserCard(Long userId) {
         User user = commonUtils.getUser(userId);
-        if (!user.getMethod().equals(PaymentMethod.CARD)) {
+        if (!user.getMethod().equals(PaymentMethod.PAYMENT)) {
             return;
         }
         CardRemovalResponse cardRemovalResponse = atmosService.removeCard(new CardRequest(user.getCardId(), user.getCardToken()));
@@ -216,7 +250,7 @@ public class MessageServiceImpl implements MessageService {
         user.setCardToken(confirmResponse.getCardToken());
         user.setCardId(confirmResponse.getCardId());
         user.setCardPhone(confirmResponse.getPhone());
-        user.setMethod(PaymentMethod.CARD);
+        user.setMethod(PaymentMethod.PAYMENT);
         temp.removeUser(userId);
         commonUtils.updateUser(user);
         userRepository.save(user);
@@ -320,6 +354,9 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private void sendAddCardNumberText(Long userId) {
+        if (!AppConstants.IS_PAYMENT)
+            return;
+
         if (commonUtils.getUser(userId).getContactNumber() == null) {
             commonUtils.setState(userId, State.SENDING_CARD_NUMBER);
             sendContactNumber(userId);

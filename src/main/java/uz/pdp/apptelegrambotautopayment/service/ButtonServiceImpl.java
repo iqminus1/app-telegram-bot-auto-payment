@@ -13,6 +13,7 @@ import uz.pdp.apptelegrambotautopayment.enums.LangFields;
 import uz.pdp.apptelegrambotautopayment.enums.PaymentMethod;
 import uz.pdp.apptelegrambotautopayment.model.User;
 import uz.pdp.apptelegrambotautopayment.repository.TransactionRepository;
+import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 
 import java.util.ArrayList;
@@ -99,23 +100,33 @@ public class ButtonServiceImpl implements ButtonService {
         List<String> list = new LinkedList<>();
 
         if (commonUtils.getUser(userId).getAdmin() != 0) {
-            list.add(langService.getMessage(LangFields.ADMIN_MENU_TEXT,userId));
+            list.add(langService.getMessage(LangFields.ADMIN_MENU_TEXT, userId));
         }
 
         //card button
-        if (user.getMethod() == null || user.getMethod().equals(PaymentMethod.CARD)) {
-            String message = langService.getMessage(LangFields.ADD_CARD_NUMBER_TEXT, userId);
-            if (user.getCardToken() != null) {
-                message = langService.getMessage(LangFields.REMOVE_CARD_NUMBER_TEXT, userId);
+        if (AppConstants.IS_PAYMENT) {
+            if (user.getMethod() == null || user.getMethod().equals(PaymentMethod.PAYMENT)) {
+                String message = langService.getMessage(LangFields.ADD_CARD_NUMBER_TEXT, userId);
+                if (user.getCardToken() != null) {
+                    message = langService.getMessage(LangFields.REMOVE_CARD_NUMBER_TEXT, userId);
+                }
+                list.add(message);
             }
-            list.add(message);
         }
         //transfer button
-        if (user.getMethod() == null || user.getMethod().equals(PaymentMethod.TRANSFER)) {
-            list.add(langService.getMessage(LangFields.TRANSFER_BUTTON, userId));
+        if (AppConstants.IS_TRANSFER) {
+            if (user.getMethod() == null || user.getMethod().equals(PaymentMethod.TRANSFER)) {
+                list.add(langService.getMessage(LangFields.TRANSFER_BUTTON, userId));
+            }
         }
 
-        if (user.isSubscribed()){
+        if (AppConstants.IS_CARD) {
+            if (user.getMethod() == null || user.getMethod().equals(PaymentMethod.CARD)) {
+                list.add(langService.getMessage(LangFields.PAY_CARD_NUMBER_TEXT, userId));
+            }
+        }
+
+        if (user.isSubscribed()) {
             String history = langService.getMessage(LangFields.BUTTON_PAYMENT_HISTORY_TEXT, userId);
 
             //payment status

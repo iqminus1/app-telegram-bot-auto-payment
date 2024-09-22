@@ -25,6 +25,17 @@ public class Sender extends DefaultAbsSender {
         }
     }
 
+    public void sendMessageWithMarkdown(Long userId, String text, ReplyKeyboard replyKeyboard) {
+        SendMessage sendMessage = new SendMessage(userId.toString(), text);
+        sendMessage.setReplyMarkup(replyKeyboard);
+        sendMessage.setParseMode("Markdown");
+        try {
+            execute(sendMessage);
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void sendMessage(Long userId, String text, ReplyKeyboard replyKeyboard) {
         SendMessage sendMessage = new SendMessage(userId.toString(), text);
         sendMessage.setReplyMarkup(replyKeyboard);
