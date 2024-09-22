@@ -29,6 +29,15 @@ public interface AppConstants {
     int ERROR_LENGTH = ERROR_TEXT.length();
     String SET_ADMIN_CODE = "2456FA55fJ1235GKNBNMKAU";
 
+    boolean IS_PAYMENT = true;
+
+    boolean IS_TRANSFER = true;
+
+    boolean IS_CARD = true;
+
+    String CARD_NUMBER = "9860 0000 0000 0000";
+    String CARD_NAME = "Qodirov Abdulaziz";
+
     static User setSubscriptionTime(User user) {
         if (user.getSubscriptionEndTime().isBefore(LocalDateTime.now())) {
             user.setSubscriptionEndTime(LocalDateTime.now().plusMinutes(SUBSCRIPTION_MONTH));

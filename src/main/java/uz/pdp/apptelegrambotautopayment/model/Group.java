@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @Getter
 @ToString
 @Entity(name = "groups")
+@Builder
 public class Group {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,4 +22,5 @@ public class Group {
     private Long groupId;
     private String token;
     private LocalDateTime expireAt;
+    private String cardNumber;
 }
