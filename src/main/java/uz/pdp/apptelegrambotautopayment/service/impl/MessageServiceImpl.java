@@ -1,22 +1,27 @@
-package uz.pdp.apptelegrambotautopayment.service;
+package uz.pdp.apptelegrambotautopayment.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import uz.pdp.apptelegrambotautopayment.dto.request.*;
 import uz.pdp.apptelegrambotautopayment.dto.response.*;
-import uz.pdp.apptelegrambotautopayment.enums.Lang;
-import uz.pdp.apptelegrambotautopayment.enums.LangFields;
-import uz.pdp.apptelegrambotautopayment.enums.PaymentMethod;
-import uz.pdp.apptelegrambotautopayment.enums.State;
+import uz.pdp.apptelegrambotautopayment.enums.*;
 import uz.pdp.apptelegrambotautopayment.model.Group;
+import uz.pdp.apptelegrambotautopayment.model.Photo;
 import uz.pdp.apptelegrambotautopayment.model.Transaction;
 import uz.pdp.apptelegrambotautopayment.model.User;
 import uz.pdp.apptelegrambotautopayment.repository.GroupRepository;
+import uz.pdp.apptelegrambotautopayment.repository.PhotoRepository;
 import uz.pdp.apptelegrambotautopayment.repository.TransactionRepository;
 import uz.pdp.apptelegrambotautopayment.repository.UserRepository;
+import uz.pdp.apptelegrambotautopayment.service.AtmosService;
+import uz.pdp.apptelegrambotautopayment.service.ButtonService;
+import uz.pdp.apptelegrambotautopayment.service.LangService;
+import uz.pdp.apptelegrambotautopayment.service.MessageService;
+import uz.pdp.apptelegrambotautopayment.service.telegram.Sender;
 import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 import uz.pdp.apptelegrambotautopayment.utils.Temp;
@@ -24,6 +29,7 @@ import uz.pdp.apptelegrambotautopayment.utils.Temp;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -38,6 +44,7 @@ public class MessageServiceImpl implements MessageService {
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
     private final GroupRepository groupRepository;
+    private final PhotoRepository photoRepository;
 
     @Override
     public void process(Message message) {
@@ -68,7 +75,10 @@ public class MessageServiceImpl implements MessageService {
                             sendTransferContactNumber(userId);
                         } else if (langService.getMessage(LangFields.PAY_CARD_NUMBER_TEXT, userId).equals(text)) {
                             sendPayCardNumber(userId);
-                        }
+                        } else if (langService.getMessage(LangFields.ADMIN_MENU_TEXT, userId).equals(text)) {
+                            sendAdminMenu(userId);
+                        } else
+                            sender.sendMessage(userId, langService.getMessage(LangFields.USE_BUTTONS, userId));
                     }
                     case SENDING_CARD_NUMBER -> {
                         if (langService.getMessage(LangFields.BACK_TEXT, userId).equals(text)) {
@@ -94,8 +104,23 @@ public class MessageServiceImpl implements MessageService {
                     case PAY_CARD_NUMBER -> {
                         if (text.equals(langService.getMessage(LangFields.BACK_TEXT, userId)))
                             start(userId);
+                        else
+                            sender.sendMessage(userId, langService.getMessage(LangFields.EXCEPTION_ON_PAY_CARD_NUMBER_TEXT, userId));
                     }
-
+                    case ADMIN_MENU -> {
+                        if (text.equals(langService.getMessage(LangFields.BACK_TEXT, userId)))
+                            start(userId);
+                        else if (text.equals(langService.getMessage(LangFields.USERS_LIST_TEXT, userId))) {
+                            usersList(userId);
+                        } else if (text.equals(langService.getMessage(LangFields.TRANSACTIONS_LIST_TEXT, userId))) {
+                            transactionsList(userId);
+                        } else if (text.equals(langService.getMessage(LangFields.SCREENSHOTS_LIST_TEXT, userId))) {
+                            screenshotsList(userId);
+                        } else if (text.equals(langService.getMessage(LangFields.ADD_WITH_TRANSFER_TEXT, userId)))
+                            addWithTransfer(userId);
+                        else
+                            sender.sendMessage(userId, langService.getMessage(LangFields.USE_BUTTONS, userId));
+                    }
                     case SENDING_CONTACT_NUMBER -> start(userId);
 
                     case SELECT_LANGUAGE -> changeLanguage(text, userId);
@@ -110,7 +135,43 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
+    private void addWithTransfer(Long userId) {
+
+    }
+
+    private void screenshotsList(Long userId) {
+
+    }
+
+    private void transactionsList(Long userId) {
+
+    }
+
+    private void usersList(Long userId) {
+
+    }
+
+    private void sendAdminMenu(Long userId) {
+        User user = commonUtils.getUser(userId);
+        if (user.getAdmin() == 0) {
+            return;
+        }
+        commonUtils.setState(userId, State.ADMIN_MENU);
+        sender.sendMessage(userId, langService.getMessage(LangFields.WELCOME_TO_ADMIN_MENU_TEXT, userId), buttonService.adminMenu(userId, user.getAdmin()));
+    }
+
     private void savePhoto(Message message) {
+        Long userId = message.getFrom().getId();
+        List<PhotoSize> photo = message.getPhoto();
+        if (photo.isEmpty()) {
+            return;
+        }
+        PhotoSize photoSize = photo.stream().max(Comparator.comparing(PhotoSize::getFileSize)).get();
+        String filePath = sender.getFilePath(photoSize);
+        photoRepository.save(new Photo(null, userId, filePath, Status.DONT_SEE, null));
+
+        commonUtils.setState(userId, State.START);
+        sender.sendMessage(userId, langService.getMessage(LangFields.SCREENSHOT_SAVED_TEXT, userId), buttonService.start(userId));
 
     }
 

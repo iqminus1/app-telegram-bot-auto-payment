@@ -1,4 +1,4 @@
-package uz.pdp.apptelegrambotautopayment.service;
+package uz.pdp.apptelegrambotautopayment.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -8,6 +8,10 @@ import uz.pdp.apptelegrambotautopayment.model.Group;
 import uz.pdp.apptelegrambotautopayment.model.User;
 import uz.pdp.apptelegrambotautopayment.repository.GroupRepository;
 import uz.pdp.apptelegrambotautopayment.repository.UserRepository;
+import uz.pdp.apptelegrambotautopayment.service.ButtonService;
+import uz.pdp.apptelegrambotautopayment.service.JoinChatService;
+import uz.pdp.apptelegrambotautopayment.service.LangService;
+import uz.pdp.apptelegrambotautopayment.service.telegram.Sender;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 
 import java.time.LocalDateTime;

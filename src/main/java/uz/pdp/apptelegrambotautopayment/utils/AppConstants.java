@@ -37,6 +37,7 @@ public interface AppConstants {
 
     String CARD_NUMBER = "9860 0000 0000 0000";
     String CARD_NAME = "Qodirov Abdulaziz";
+    String FILE_PATH = "C:/Users/User/IdeaProjects/app-telegram-bot-auto-payment/files/";
 
     static User setSubscriptionTime(User user) {
         if (user.getSubscriptionEndTime().isBefore(LocalDateTime.now())) {

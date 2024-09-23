@@ -1,4 +1,4 @@
-package uz.pdp.apptelegrambotautopayment.service;
+package uz.pdp.apptelegrambotautopayment.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,6 +13,8 @@ import uz.pdp.apptelegrambotautopayment.enums.LangFields;
 import uz.pdp.apptelegrambotautopayment.enums.PaymentMethod;
 import uz.pdp.apptelegrambotautopayment.model.User;
 import uz.pdp.apptelegrambotautopayment.repository.TransactionRepository;
+import uz.pdp.apptelegrambotautopayment.service.ButtonService;
+import uz.pdp.apptelegrambotautopayment.service.LangService;
 import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 
@@ -161,5 +163,25 @@ public class ButtonServiceImpl implements ButtonService {
         rows.add(row2);
         markup.setKeyboard(rows);
         return markup;
+    }
+
+    @Override
+    public ReplyKeyboard adminMenu(Long userId, int adminLvl) {
+        List<String> list = new LinkedList<>();
+
+        if (adminLvl >= 4)
+            list.add(langService.getMessage(LangFields.ADD_WITH_TRANSFER_TEXT, userId));
+
+        if (adminLvl >= 3)
+            list.add(langService.getMessage(LangFields.SCREENSHOTS_LIST_TEXT, userId));
+
+        if (adminLvl >= 2)
+            list.add(langService.getMessage(LangFields.TRANSACTIONS_LIST_TEXT, userId));
+
+        if (adminLvl >= 1)
+            list.add(langService.getMessage(LangFields.USERS_LIST_TEXT, userId));
+
+        list.add(langService.getMessage(LangFields.BACK_TEXT, userId));
+        return withString(list);
     }
 }

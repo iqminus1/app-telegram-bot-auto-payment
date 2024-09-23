@@ -1,14 +1,27 @@
-package uz.pdp.apptelegrambotautopayment.service;
+package uz.pdp.apptelegrambotautopayment.service.telegram;
 
 import org.springframework.stereotype.Component;
+import org.springframework.util.StreamUtils;
 import org.telegram.telegrambots.bots.DefaultAbsSender;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
+import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.*;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.ChatInviteLink;
+import org.telegram.telegrambots.meta.api.objects.File;
+import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
 
 @Component
 public class Sender extends DefaultAbsSender {
@@ -109,6 +122,31 @@ public class Sender extends DefaultAbsSender {
         try {
             return !execute(new GetChatMember(groupId.toString(), userId)).getStatus().equals("left");
         } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String getFilePath(PhotoSize photoSize) {
+        GetFile getFile = new GetFile(photoSize.getFileId());
+        try {
+            File execute = execute(getFile);
+
+            String fileUrl = execute.getFileUrl(AppConstants.BOT_TOKEN);
+
+            String fileName = UUID.randomUUID().toString();
+            String[] split = fileUrl.split("\\.");
+            String fileExtension = split[split.length - 1];
+            String filePath = fileName + "." + fileExtension;
+
+            Path targetPath = Paths.get(AppConstants.FILE_PATH, filePath);
+
+            try (InputStream inputStream = new URL(fileUrl).openStream();
+                 OutputStream outputStream = Files.newOutputStream(targetPath)) {
+                StreamUtils.copy(inputStream, outputStream);
+            }
+
+            return targetPath.toString();
+        } catch (TelegramApiException | IOException e) {
             throw new RuntimeException(e);
         }
     }
