@@ -19,14 +19,15 @@ public class CommonUtils {
     private final ConcurrentMap<Long, User> users = new ConcurrentHashMap<>();
     private final UserRepository userRepository;
 
-    public void updateUser(User user) {
-        users.put(user.getId(), user);
-    }
-
     public User getUser(Long userId) {
-        return users.getOrDefault(userId,
+        return users.computeIfAbsent(userId, k ->
                 userRepository.findById(userId).orElseGet(() ->
-                        userRepository.save(User.builder().id(userId).state(State.START).lang(Lang.UZ).subscriptionEndTime(LocalDateTime.now()).build())));
+                        userRepository.save(User.builder()
+                                .id(userId)
+                                .state(State.START)
+                                .lang(Lang.UZ)
+                                .subscriptionEndTime(LocalDateTime.now())
+                                .build())));
     }
 
     public State getState(Long userId) {
@@ -37,7 +38,6 @@ public class CommonUtils {
         User user = getUser(userId);
         if (user != null) {
             user.setState(state);
-            updateUser(user);
         }
     }
 

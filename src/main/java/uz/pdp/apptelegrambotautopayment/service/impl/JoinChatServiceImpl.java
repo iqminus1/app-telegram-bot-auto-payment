@@ -46,7 +46,6 @@ public class JoinChatServiceImpl implements JoinChatService {
                 sender.acceptJoinRequest(userId, groupId);
                 user.setSubscribed(true);
                 userRepository.save(user);
-                commonUtils.updateUser(user);
             }
         } else {
             sender.openChat(userId, groupId);

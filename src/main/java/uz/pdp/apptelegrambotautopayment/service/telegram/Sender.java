@@ -7,6 +7,7 @@ import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.*;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.ChatInviteLink;
 import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
@@ -148,6 +149,18 @@ public class Sender extends DefaultAbsSender {
             return targetPath.toString();
         } catch (TelegramApiException | IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public Chat getChat(Long userId) {
+        try {
+            return execute(new GetChat(userId.toString()));
+        } catch (TelegramApiException e) {
+            Chat chat = new Chat();
+            chat.setId(userId);
+            chat.setUserName("topilmadi");
+            chat.setFirstName("topilmadi");
+            return chat;
         }
     }
 }

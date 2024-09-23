@@ -168,6 +168,8 @@ public class ButtonServiceImpl implements ButtonService {
     @Override
     public ReplyKeyboard adminMenu(Long userId, int adminLvl) {
         List<String> list = new LinkedList<>();
+        if (adminLvl >= 5)
+            list.add(langService.getMessage(LangFields.ADMINS_LIST_TEXT, userId));
 
         if (adminLvl >= 4)
             list.add(langService.getMessage(LangFields.ADD_WITH_TRANSFER_TEXT, userId));

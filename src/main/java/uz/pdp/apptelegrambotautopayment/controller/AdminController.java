@@ -30,7 +30,6 @@ public class AdminController {
                     User user = commonUtils.getUser(userId);
                     user.setAdmin(adminLvl);
                     userRepository.save(user);
-                    commonUtils.updateUser(user);
                     sender.sendMessage(userId,langService.getMessage(LangFields.CHANGED_TO_ADMIN,userId).formatted(adminLvl));
                 }
             }

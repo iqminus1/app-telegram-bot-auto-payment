@@ -1,24 +1,28 @@
 package uz.pdp.apptelegrambotautopayment.utils;
 
 import org.springframework.stereotype.Component;
-import uz.pdp.apptelegrambotautopayment.model.User;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 @Component
 public class Temp {
-    private final ConcurrentMap<Long, User> users = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Long, LinkedList<Object>> objects = new ConcurrentHashMap<>();
 
-    public User getUser(Long userId) {
-        return users.get(userId);
+    public void clear(Long userId) {
+        objects.remove(userId);
     }
 
-    public void setUser(User user) {
-        users.put(user.getId(), user);
+    public List<Object> getObjects(Long userId) {
+        if (objects.containsKey(userId)) {
+            return objects.get(userId);
+        }
+        return new LinkedList<>();
     }
 
-    public void removeUser(Long userId) {
-        users.remove(userId);
+    public void putObject(Long userId, Object object) {
+        objects.computeIfAbsent(userId, k -> new LinkedList<>()).add(object);
     }
 }

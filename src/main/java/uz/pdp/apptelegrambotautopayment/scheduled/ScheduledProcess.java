@@ -23,7 +23,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -55,8 +54,8 @@ public class ScheduledProcess {
         }
     }
 
-    //    @Scheduled(cron = "0 0 3 * * ?")
-    @Scheduled(fixedRate = 10, timeUnit = TimeUnit.MINUTES)
+    @Scheduled(cron = "0 0 3 * * ?")
+//    @Scheduled(fixedRate = 10, timeUnit = TimeUnit.MINUTES)
     public void getPayment() {
         //Save qivolib userlani keyin paymant yechiladi.
         //State tudum sudmlari o`zgarib ketmasligi uchun.
@@ -94,7 +93,6 @@ public class ScheduledProcess {
         transactionRepository.save(new Transaction(applyResponse));
         AppConstants.setSubscriptionTime(user);
         userRepository.save(user);
-        commonUtils.updateUser(user);
         sender.sendMessage(user.getId(), langService.getMessage(LangFields.YOU_PAID_TEXT, user.getId()));
     }
 
@@ -103,7 +101,6 @@ public class ScheduledProcess {
         sender.kickChatMember(user.getId(), groupId);
         user.setSubscribed(false);
         userRepository.save(user);
-        commonUtils.updateUser(user);
         sender.sendMessage(user.getId(), langService.getMessage(field, user.getId()));
 
     }
