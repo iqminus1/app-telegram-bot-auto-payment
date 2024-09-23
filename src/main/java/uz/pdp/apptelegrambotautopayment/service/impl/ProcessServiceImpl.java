@@ -1,8 +1,12 @@
-package uz.pdp.apptelegrambotautopayment.service;
+package uz.pdp.apptelegrambotautopayment.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import uz.pdp.apptelegrambotautopayment.service.JoinChatService;
+import uz.pdp.apptelegrambotautopayment.service.MessageService;
+import uz.pdp.apptelegrambotautopayment.service.MyChatMemberService;
+import uz.pdp.apptelegrambotautopayment.service.ProcessService;
 
 @Service
 @RequiredArgsConstructor

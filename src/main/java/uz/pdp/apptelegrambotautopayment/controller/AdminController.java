@@ -9,7 +9,7 @@ import uz.pdp.apptelegrambotautopayment.enums.LangFields;
 import uz.pdp.apptelegrambotautopayment.model.User;
 import uz.pdp.apptelegrambotautopayment.repository.UserRepository;
 import uz.pdp.apptelegrambotautopayment.service.LangService;
-import uz.pdp.apptelegrambotautopayment.service.Sender;
+import uz.pdp.apptelegrambotautopayment.service.telegram.Sender;
 import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 

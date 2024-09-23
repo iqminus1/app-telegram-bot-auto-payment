@@ -1,4 +1,4 @@
-package uz.pdp.apptelegrambotautopayment.service;
+package uz.pdp.apptelegrambotautopayment.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -17,6 +17,9 @@ import uz.pdp.apptelegrambotautopayment.enums.LangFields;
 import uz.pdp.apptelegrambotautopayment.model.Group;
 import uz.pdp.apptelegrambotautopayment.model.User;
 import uz.pdp.apptelegrambotautopayment.repository.GroupRepository;
+import uz.pdp.apptelegrambotautopayment.service.AtmosService;
+import uz.pdp.apptelegrambotautopayment.service.LangService;
+import uz.pdp.apptelegrambotautopayment.service.telegram.Sender;
 import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 
@@ -265,14 +268,6 @@ public class AtmosServiceImpl implements AtmosService {
             throw new RuntimeException(e);
         }
 
-    }
-
-    @Override
-    public void sendErrorMessage(Long userId, String code) {
-        if (code.equals("003")) {
-            sender.sendMessage(userId, langService.getMessage(LangFields.ERROR_003, userId));
-            return;
-        }
     }
 
 

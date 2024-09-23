@@ -19,5 +19,4 @@ public interface AtmosService {
     ApplyResponse autoPayment(Long userId);
 
     CardRemovalResponse removeCard(CardRequest request);
-    void sendErrorMessage(Long userId,String code);
 }

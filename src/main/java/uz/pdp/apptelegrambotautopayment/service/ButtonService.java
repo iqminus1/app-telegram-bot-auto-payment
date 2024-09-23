@@ -23,4 +23,6 @@ public interface ButtonService {
     ReplyKeyboard start(Long userId);
 
     ReplyKeyboard requestContact(Long userId);
+
+    ReplyKeyboard adminMenu(Long userId, int adminLvl);
 }

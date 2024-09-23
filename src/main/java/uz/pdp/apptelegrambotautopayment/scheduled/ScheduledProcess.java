@@ -15,7 +15,7 @@ import uz.pdp.apptelegrambotautopayment.repository.UserRepository;
 import uz.pdp.apptelegrambotautopayment.service.AtmosService;
 import uz.pdp.apptelegrambotautopayment.service.ButtonService;
 import uz.pdp.apptelegrambotautopayment.service.LangService;
-import uz.pdp.apptelegrambotautopayment.service.Sender;
+import uz.pdp.apptelegrambotautopayment.service.telegram.Sender;
 import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 

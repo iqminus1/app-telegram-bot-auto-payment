@@ -1,10 +1,11 @@
-package uz.pdp.apptelegrambotautopayment.service;
+package uz.pdp.apptelegrambotautopayment.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import uz.pdp.apptelegrambotautopayment.enums.Lang;
 import uz.pdp.apptelegrambotautopayment.enums.LangFields;
+import uz.pdp.apptelegrambotautopayment.service.LangService;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 
 import java.util.Locale;
