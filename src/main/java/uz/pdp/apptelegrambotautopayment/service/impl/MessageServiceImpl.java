@@ -196,11 +196,11 @@ public class MessageServiceImpl implements MessageService {
     private String getChatToString(Chat chat) {
         StringBuilder sb = new StringBuilder();
         sb.append("#").append(chat.getId());
-        if (chat.getFirstName() != null) {
-            sb.append(" ").append(chat.getFirstName());
-        }
         if (chat.getUserName() != null) {
             sb.append(" @").append(chat.getUserName());
+        }
+        if (chat.getFirstName() != null) {
+            sb.append(" ").append(chat.getFirstName());
         }
         return sb.toString();
     }
@@ -261,7 +261,6 @@ public class MessageServiceImpl implements MessageService {
             return;
         user.setPayment(false);
         userRepository.save(user);
-        commonUtils.updateUser(user);
         sender.sendMessage(userId, langService.getMessage(LangFields.PAYMENT_IS_STOPPED_TEXT, userId), buttonService.start(userId));
     }
 
@@ -280,7 +279,6 @@ public class MessageServiceImpl implements MessageService {
             b = true;
         }
         userRepository.save(user);
-        commonUtils.updateUser(user);
         sender.sendMessage(userId, langService.getMessage(LangFields.PAYMENT_IS_STARTED_TEXT, userId), buttonService.start(userId));
         List<Group> groups = groupRepository.findAll();
         if (b)
@@ -319,7 +317,6 @@ public class MessageServiceImpl implements MessageService {
             user.setContactNumber(phoneNumber);
             user.setState(State.START);
             userRepository.save(user);
-            commonUtils.updateUser(user);
             sendAddCardNumberText(userId);
             return;
         }
@@ -344,12 +341,11 @@ public class MessageServiceImpl implements MessageService {
         user.setCardPhone(null);
         user.setMethod(null);
         userRepository.save(user);
-        commonUtils.updateUser(user);
         sender.sendMessage(userId, langService.getMessage(LangFields.CARD_NUMBER_DELETED_TEXT, userId), buttonService.start(userId));
     }
 
     private void checkCardCode(Long userId, String text) {
-        User user = temp.getUser(userId);
+        User user = commonUtils.getUser(userId);
 
         //card confirm start
         CardBindingConfirmResponse confirmResponse = atmosService.confirmCardBinding(new CardBindingConfirmRequest(text, user.getTransactionId()));
@@ -366,8 +362,6 @@ public class MessageServiceImpl implements MessageService {
         user.setCardId(confirmResponse.getCardId());
         user.setCardPhone(confirmResponse.getPhone());
         user.setMethod(PaymentMethod.PAYMENT);
-        temp.removeUser(userId);
-        commonUtils.updateUser(user);
         userRepository.save(user);
         //card confirm end
 
@@ -403,7 +397,6 @@ public class MessageServiceImpl implements MessageService {
         user.setState(State.START);
         user.setPayment(true);
         userRepository.save(user);
-        commonUtils.updateUser(user);
         List<Group> groups = groupRepository.findAll();
         if (groups.size() == 1) {
             String link = sender.getLink(groups.get(0).getGroupId());
@@ -413,14 +406,13 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private void exceptionAtmos(Long userId, String errorMessage) {
-        temp.removeUser(userId);
         commonUtils.setState(userId, State.START);
         sender.sendMessage(userId, langService.getMessage(LangFields.EXCEPTION_ATMOS_TEXT, userId).formatted(errorMessage), buttonService.start(userId));
     }
 
     private void sendingCardExpire(Long userId, String text) {
         if (text.matches("^(0[1-9]|1[0-2])(\\d{2}$)")) {
-            User user = temp.getUser(userId);
+            User user = commonUtils.getUser(userId);
             String str = text.substring(2) + text.substring(0, 2);
             CardBindingInitResponse cardBindingInitResponse = atmosService.initializeCardBinding(new CardBindingInitRequest(user.getCardNumber(), str));
             if (cardBindingInitResponse.getTransactionId() != null) {
@@ -428,7 +420,6 @@ public class MessageServiceImpl implements MessageService {
                 user.setCardExpiry(text);
                 user.setTransactionId(cardBindingInitResponse.getTransactionId());
                 user.setCardPhone(cardBindingInitResponse.getPhone());
-                temp.setUser(user);
                 sender.sendMessage(userId, langService.getMessage(LangFields.SEND_CARD_CODE_TEXT, userId).formatted(cardBindingInitResponse.getPhone()), new ReplyKeyboardRemove(true));
                 return;
             }
@@ -464,7 +455,6 @@ public class MessageServiceImpl implements MessageService {
             return;
         }
         user.setCardNumber(formattedCardNumber);
-        temp.setUser(user);
         sender.sendMessage(userId, langService.getMessage(LangFields.SEND_CARD_EXPIRE_TEXT, userId));
     }
 
@@ -472,16 +462,16 @@ public class MessageServiceImpl implements MessageService {
         if (!AppConstants.IS_PAYMENT)
             return;
 
-        if (commonUtils.getUser(userId).getContactNumber() == null) {
+        User user = commonUtils.getUser(userId);
+        if (user.getContactNumber() == null) {
             commonUtils.setState(userId, State.SENDING_CARD_NUMBER);
             sendContactNumber(userId);
             return;
         }
-        if (commonUtils.getUser(userId).getMethod() != null) {
+        if (user.getMethod() != null) {
             return;
         }
         commonUtils.setState(userId, State.SENDING_CARD_NUMBER);
-        temp.removeUser(userId);
         String message = langService.getMessage(LangFields.SEND_CARD_NUMBER_TEXT, userId);
         ReplyKeyboard replyKeyboard = buttonService.withString(List.of(langService.getMessage(LangFields.BACK_TEXT, userId)));
         sender.sendMessage(userId, message, replyKeyboard);
@@ -512,10 +502,7 @@ public class MessageServiceImpl implements MessageService {
 //    }
 
     private void start(Long userId) {
-        User user = commonUtils.getUser(userId);
-        user.setState(State.START);
-        commonUtils.updateUser(user);
-        temp.removeUser(userId);
+        commonUtils.setState(userId, State.START);
         sender.sendMessage(userId, langService.getMessage(LangFields.HELLO, userId), buttonService.start(userId));
     }
 }

@@ -93,7 +93,6 @@ public class ScheduledProcess {
         transactionRepository.save(new Transaction(applyResponse));
         AppConstants.setSubscriptionTime(user);
         userRepository.save(user);
-        commonUtils.updateUser(user);
         sender.sendMessage(user.getId(), langService.getMessage(LangFields.YOU_PAID_TEXT, user.getId()));
     }
 
@@ -102,7 +101,6 @@ public class ScheduledProcess {
         sender.kickChatMember(user.getId(), groupId);
         user.setSubscribed(false);
         userRepository.save(user);
-        commonUtils.updateUser(user);
         sender.sendMessage(user.getId(), langService.getMessage(field, user.getId()));
 
     }
