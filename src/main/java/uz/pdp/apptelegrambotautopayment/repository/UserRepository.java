@@ -13,5 +13,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findAllBySubscribedAndSubscriptionEndTimeIsBetween(boolean subscribed, LocalDateTime start, LocalDateTime end);
 
+    List<User> findAllBySubscribed(boolean subscribed);
+
     boolean existsByCardNumber(String cardNumber);
 }

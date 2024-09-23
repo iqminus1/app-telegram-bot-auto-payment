@@ -2,6 +2,7 @@ package uz.pdp.apptelegrambotautopayment.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
@@ -118,7 +119,9 @@ public class MessageServiceImpl implements MessageService {
                             screenshotsList(userId);
                         } else if (text.equals(langService.getMessage(LangFields.ADD_WITH_TRANSFER_TEXT, userId)))
                             addWithTransfer(userId);
-                        else
+                        else if (text.equals(langService.getMessage(LangFields.ADMINS_LIST_TEXT, userId))) {
+                            adminsList(userId);
+                        } else
                             sender.sendMessage(userId, langService.getMessage(LangFields.USE_BUTTONS, userId));
                     }
                     case SENDING_CONTACT_NUMBER -> start(userId);
@@ -135,20 +138,71 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
-    private void addWithTransfer(Long userId) {
+    private void adminsList(Long userId) {
+        User user = commonUtils.getUser(userId);
+        if (user.getAdmin() < 5) {
+            sender.sendMessage(userId, langService.getMessage(LangFields.ADMIN_ACCESS_DENIDED, userId).formatted(5, user.getAdmin()));
+            return;
+        }
+    }
 
+    private void addWithTransfer(Long userId) {
+        User user = commonUtils.getUser(userId);
+        if (user.getAdmin() < 4) {
+            sender.sendMessage(userId, langService.getMessage(LangFields.ADMIN_ACCESS_DENIDED, userId).formatted(4, user.getAdmin()));
+            return;
+        }
     }
 
     private void screenshotsList(Long userId) {
-
+        User user = commonUtils.getUser(userId);
+        if (user.getAdmin() < 3) {
+            sender.sendMessage(userId, langService.getMessage(LangFields.ADMIN_ACCESS_DENIDED, userId).formatted(3, user.getAdmin()));
+            return;
+        }
     }
 
     private void transactionsList(Long userId) {
-
+        User user = commonUtils.getUser(userId);
+        if (user.getAdmin() < 2) {
+            sender.sendMessage(userId, langService.getMessage(LangFields.ADMIN_ACCESS_DENIDED, userId).formatted(2, user.getAdmin()));
+            return;
+        }
     }
 
     private void usersList(Long userId) {
+        List<User> users = userRepository.findAllBySubscribed(true);
+        if (users.isEmpty()) {
+            sender.sendMessage(userId, langService.getMessage(LangFields.EMPTY_USERS_LIST_TEXT, userId));
+            return;
+        }
 
+        String header = langService.getMessage(LangFields.HEADER_USERS_LIST_TEXT, userId);
+        StringBuilder sb = new StringBuilder(header);
+        for (int i = 0; i < users.size(); i += 10) {
+            for (int j = 0; j < 10 && (i + j) < users.size(); j++) {
+                User user = users.get(i + j);
+                Chat chat = sender.getChat(user.getId());
+                sb.append(getChatToString(chat)).append("\n");
+
+                LocalDateTime end = user.getSubscriptionEndTime();
+                sb.append(end.toLocalDate()).append(" ").append(end.toLocalTime()).append("\n\n");
+            }
+            sender.sendMessage(userId, sb.toString());
+            sb.setLength(0);
+        }
+    }
+
+    private String getChatToString(Chat chat) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("#").append(chat.getId());
+        if (chat.getFirstName() != null) {
+            sb.append(" ").append(chat.getFirstName());
+        }
+        if (chat.getUserName() != null) {
+            sb.append(" @").append(chat.getUserName());
+        }
+        return sb.toString();
     }
 
     private void sendAdminMenu(Long userId) {

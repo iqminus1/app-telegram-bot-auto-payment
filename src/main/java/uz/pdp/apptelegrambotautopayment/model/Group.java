@@ -22,5 +22,4 @@ public class Group {
     private Long groupId;
     private String token;
     private LocalDateTime expireAt;
-    private String cardNumber;
 }
