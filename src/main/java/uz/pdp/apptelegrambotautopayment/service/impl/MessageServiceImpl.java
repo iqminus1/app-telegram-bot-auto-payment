@@ -90,7 +90,7 @@ public class MessageServiceImpl implements MessageService {
                     }
                     case SENDING_CARD_EXPIRE -> {
                         if (langService.getMessage(LangFields.BACK_TEXT, userId).equals(text)) {
-                            start(userId);
+                            sendAddCardNumberText(userId);
                         } else {
                             sendingCardExpire(userId, text);
                         }
