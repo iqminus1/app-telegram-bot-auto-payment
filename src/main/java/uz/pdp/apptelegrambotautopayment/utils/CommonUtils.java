@@ -1,5 +1,6 @@
 package uz.pdp.apptelegrambotautopayment.utils;
 
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -60,9 +61,6 @@ public class CommonUtils {
         users.clear();
     }
 
-    public void putTransaction(Long userId, Transaction transaction) {
-        transfers.put(userId, transaction);
-    }
 
     public Transaction getTransaction(Long userId) {
         return transfers.computeIfAbsent(userId, k -> new Transaction());
@@ -70,5 +68,11 @@ public class CommonUtils {
 
     public void removeTransaction(Long userid) {
         transfers.remove(userid);
+    }
+
+    @PreDestroy
+    public void saveUtils() {
+        userRepository.saveAll(users.values());
+        users.clear();
     }
 }

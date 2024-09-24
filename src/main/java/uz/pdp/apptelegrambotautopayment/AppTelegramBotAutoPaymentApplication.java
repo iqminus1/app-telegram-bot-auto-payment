@@ -9,7 +9,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Date;
+import java.text.DecimalFormat;
 
 @EnableScheduling
 @SpringBootApplication
@@ -37,5 +37,10 @@ public class AppTelegramBotAutoPaymentApplication {
     @Bean
     public ObjectMapper objectMapper() {
         return new ObjectMapper();
+    }
+
+    @Bean
+    public DecimalFormat decimalFormat() {
+        return new DecimalFormat("###,###,###");
     }
 }

@@ -49,6 +49,7 @@ public class MessageServiceImpl implements MessageService {
     private final UserRepository userRepository;
     private final GroupRepository groupRepository;
     private final PhotoRepository photoRepository;
+    private final DecimalFormat decimalFormat;
 
     @Override
     public void process(Message message) {
@@ -134,12 +135,12 @@ public class MessageServiceImpl implements MessageService {
                     case SELECT_PAYMENT_METHOD -> {
                         if (langService.getMessage(LangFields.BACK_TEXT, userId).equals(text))
                             sendAdminMenu(userId);
-                        else if (langService.getMessage(LangFields.PAYMENT_METHOD_PAYMENT_TEXT, userId).equals(text))
-                            paymentLists(userId);
-                        else if (langService.getMessage(LangFields.PAYMENT_METHOD_TRANSFER_TEXT, userId).equals(text))
-                            transfersList(userId);
-                        else if (langService.getMessage(LangFields.PAYMENT_METHOD_CARD_TEXT, userId).equals(text))
-                            payToCardList(userId);
+                        else if (AppConstants.IS_PAYMENT && langService.getMessage(LangFields.PAYMENT_METHOD_PAYMENT_TEXT, userId).equals(text))
+                            sendPaymentsListWithStatus(userId, PaymentMethod.PAYMENT);
+                        else if (AppConstants.IS_TRANSFER && langService.getMessage(LangFields.PAYMENT_METHOD_TRANSFER_TEXT, userId).equals(text))
+                            sendPaymentsListWithStatus(userId, PaymentMethod.TRANSFER);
+                        else if (AppConstants.IS_CARD && langService.getMessage(LangFields.PAYMENT_METHOD_CARD_TEXT, userId).equals(text))
+                            sendPaymentsListWithStatus(userId, PaymentMethod.CARD);
                         else
                             sender.sendMessage(userId, langService.getMessage(LangFields.USE_BUTTONS, userId));
                     }
@@ -246,16 +247,19 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
-    private void payToCardList(Long userId) {
 
+    private void sendPaymentsListWithStatus(Long userId, PaymentMethod method) {
+        List<Transaction> transactions = transactionRepository.findAllByMethod(method);
+        if (transactions.isEmpty()) {
+            sender.sendMessage(userId, langService.getMessage(LangFields.EMPTY_PAYMENT_METHOD_LIST, userId));
+            return;
+        }
+        for (Transaction transaction : transactions) {
+            LocalDateTime payAt = transaction.getPayAt();
+            sender.sendMessage(userId, getChatToString(sender.getChat(transaction.getUserId())) + "\n" + payAt.toLocalDate() + " " + payAt.toLocalTime() + " " + decimalFormat.format(transaction.getAmount()));
+        }
     }
 
-    private void transfersList(Long userId) {
-    }
-
-    private void paymentLists(Long userId) {
-
-    }
 
     private void adminsList(Long userId) {
         User user = commonUtils.getUser(userId);
@@ -272,6 +276,9 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private void addWithTransfer(Long userId) {
+        if (!AppConstants.IS_TRANSFER) {
+            return;
+        }
         User user = commonUtils.getUser(userId);
         if (user.getAdmin() < 4) {
             sender.sendMessage(userId, langService.getMessage(LangFields.ADMIN_ACCESS_DENIDED, userId).formatted(4, user.getAdmin()));
@@ -282,6 +289,9 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private void screenshotsList(Long userId) {
+        if (!AppConstants.IS_CARD) {
+            return;
+        }
         User user = commonUtils.getUser(userId);
         if (user.getAdmin() < 3) {
             sender.sendMessage(userId, langService.getMessage(LangFields.ADMIN_ACCESS_DENIDED, userId).formatted(3, user.getAdmin()));
@@ -366,7 +376,7 @@ public class MessageServiceImpl implements MessageService {
         PaymentMethod method = commonUtils.getUser(userId).getMethod();
         if (method == null || method.equals(PaymentMethod.CARD)) {
             String text = langService.getMessage(LangFields.ADMIN_CARD_NUMBER_TEXT, userId);
-            String price = new DecimalFormat("###,###,###").format(AppConstants.PRICE);
+            String price = decimalFormat.format(AppConstants.PRICE);
             String som = langService.getMessage(LangFields.SOM_TEXT, userId);
             String withCardNumber = text.formatted(AppConstants.CARD_NAME, AppConstants.CARD_NUMBER, (price + " " + som));
             ReplyKeyboard backButton = buttonService.withString(List.of(langService.getMessage(LangFields.BACK_TEXT, userId)));
@@ -422,7 +432,6 @@ public class MessageServiceImpl implements MessageService {
             sender.sendMessage(userId, langService.getMessage(LangFields.EMPTY_PAYMENT_HISTORY_TEXT, userId));
             return;
         }
-        DecimalFormat decimalFormat = new DecimalFormat("###,###,###");
         int i = 0;
         StringBuilder sb = new StringBuilder();
         int size = transactions.size();
