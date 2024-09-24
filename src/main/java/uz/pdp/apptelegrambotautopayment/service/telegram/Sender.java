@@ -7,10 +7,10 @@ import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.*;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Chat;
-import org.telegram.telegrambots.meta.api.objects.ChatInviteLink;
-import org.telegram.telegrambots.meta.api.objects.File;
-import org.telegram.telegrambots.meta.api.objects.PhotoSize;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageCaption;
+import org.telegram.telegrambots.meta.api.objects.*;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
@@ -161,6 +161,29 @@ public class Sender extends DefaultAbsSender {
             chat.setUserName("topilmadi");
             chat.setFirstName("topilmadi");
             return chat;
+        }
+    }
+
+    public void sendPhoto(Long userId, String caption, String path, InlineKeyboardMarkup keyboard) {
+        SendPhoto sendPhoto = new SendPhoto();
+        sendPhoto.setCaption(caption);
+        InputFile photo = new InputFile();
+        photo.setMedia(new java.io.File(path));
+        sendPhoto.setPhoto(photo);
+        sendPhoto.setChatId(userId);
+        sendPhoto.setReplyMarkup(keyboard);
+        executeAsync(sendPhoto);
+    }
+
+    public void changeCaption(Long userId, Integer messageId, String text) {
+        EditMessageCaption editMessageCaption = new EditMessageCaption();
+        editMessageCaption.setChatId(userId);
+        editMessageCaption.setCaption(text);
+        editMessageCaption.setMessageId(messageId);
+        try {
+            execute(editMessageCaption);
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
         }
     }
 }

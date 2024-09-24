@@ -25,4 +25,8 @@ public interface ButtonService {
     ReplyKeyboard requestContact(Long userId);
 
     ReplyKeyboard adminMenu(Long userId, int adminLvl);
+
+    ReplyKeyboard paymentMethods(Long userId);
+
+    InlineKeyboardMarkup screenshotKeyboard(Long userId, Long screenshotId);
 }

@@ -38,13 +38,27 @@ public interface AppConstants {
     String CARD_NUMBER = "9860 0000 0000 0000";
     String CARD_NAME = "Qodirov Abdulaziz";
     String FILE_PATH = "C:/Users/User/IdeaProjects/app-telegram-bot-auto-payment/files/";
+    String ACCEPT_SCREENSHOT_DATA = "acceptScreenshot:";
+    String REJECT_SCREENSHOT_DATA = "rejectScreenshot:";
 
     static User setSubscriptionTime(User user) {
         if (user.getSubscriptionEndTime().isBefore(LocalDateTime.now())) {
-            user.setSubscriptionEndTime(LocalDateTime.now().plusMinutes(SUBSCRIPTION_MONTH));
+            user.setSubscriptionEndTime(LocalDateTime.now().plusMonths(SUBSCRIPTION_MONTH));
         } else
-            user.setSubscriptionEndTime(user.getSubscriptionEndTime().plusMinutes(SUBSCRIPTION_MONTH));
+            user.setSubscriptionEndTime(user.getSubscriptionEndTime().plusMonths(SUBSCRIPTION_MONTH));
         return user;
+    }
+
+    static String getChatToString(Chat chat) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("#").append(chat.getId());
+        if (chat.getUserName() != null) {
+            sb.append(" @").append(chat.getUserName());
+        }
+        if (chat.getFirstName() != null) {
+            sb.append(" ").append(chat.getFirstName());
+        }
+        return sb.toString();
     }
 
 }
