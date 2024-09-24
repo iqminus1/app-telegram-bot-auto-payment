@@ -1,6 +1,8 @@
 package uz.pdp.apptelegrambotautopayment.model;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import lombok.*;
 import uz.pdp.apptelegrambotautopayment.enums.Lang;
@@ -20,6 +22,7 @@ public class User {
     @Id
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     private State state;
 
     private Lang lang;
@@ -46,5 +49,6 @@ public class User {
 
     private int admin;
 
+    @Enumerated(EnumType.STRING)
     private PaymentMethod method;
 }

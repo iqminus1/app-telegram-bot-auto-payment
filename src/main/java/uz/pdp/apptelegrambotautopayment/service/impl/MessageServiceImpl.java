@@ -111,6 +111,7 @@ public class MessageServiceImpl implements MessageService {
                         else
                             sender.sendMessage(userId, langService.getMessage(LangFields.EXCEPTION_ON_PAY_CARD_NUMBER_TEXT, userId));
                     }
+
                     case ADMIN_MENU -> {
                         if (text.equals(langService.getMessage(LangFields.BACK_TEXT, userId)))
                             start(userId);
@@ -127,7 +128,9 @@ public class MessageServiceImpl implements MessageService {
                         } else
                             sender.sendMessage(userId, langService.getMessage(LangFields.USE_BUTTONS, userId));
                     }
+
                     case SENDING_CONTACT_NUMBER -> start(userId);
+
                     case SELECT_PAYMENT_METHOD -> {
                         if (langService.getMessage(LangFields.BACK_TEXT, userId).equals(text))
                             sendAdminMenu(userId);
@@ -140,6 +143,24 @@ public class MessageServiceImpl implements MessageService {
                         else
                             sender.sendMessage(userId, langService.getMessage(LangFields.USE_BUTTONS, userId));
                     }
+                    case SENDING_TRANSFER_USER_ID -> {
+                        if (langService.getMessage(LangFields.BACK_TEXT, userId).equals(text))
+                            sendAdminMenu(userId);
+                        else
+                            checkTransferUserId(message);
+                    }
+                    case SENDING_TRANSFER_USER_AMOUNT -> {
+                        if (langService.getMessage(LangFields.BACK_TEXT, userId).equals(text))
+                            addWithTransfer(userId);
+                        else
+                            checkTransferAmount(message);
+                    }
+                    case SENDING_TRANSFER_MONTHS_AMOUNT -> {
+                        if (langService.getMessage(LangFields.BACK_TEXT, userId).equals(text))
+                            backToTransferUserAmount(userId);
+                        else
+                            checkTransferMonths(message);
+                    }
                     case SELECT_LANGUAGE -> changeLanguage(text, userId);
                 }
             } else if (message.hasContact()) {
@@ -149,6 +170,79 @@ public class MessageServiceImpl implements MessageService {
                 if (commonUtils.getState(message.getFrom().getId()).equals(State.PAY_CARD_NUMBER))
                     savePhoto(message);
             }
+        }
+    }
+
+    private void checkTransferMonths(Message message) {
+        Long userId = message.getFrom().getId();
+        try {
+            long month = Long.parseLong(message.getText());
+
+            Transaction transaction = commonUtils.getTransaction(userId);
+            transaction.setSuccessTransId(userId.toString());
+            transaction.setPayAt(LocalDateTime.now());
+            transactionRepository.save(transaction);
+            commonUtils.removeTransaction(userId);
+
+            Long transferUserid = transaction.getUserId();
+            User user = commonUtils.getUser(transferUserid);
+            if (user.getSubscriptionEndTime().isBefore(LocalDateTime.now())) {
+                user.setSubscriptionEndTime(LocalDateTime.now().plusMonths(month));
+                List<Group> groups = groupRepository.findAll();
+                if (groups.size() == 1) {
+                    sender.sendMessage(transferUserid, langService.getMessage(LangFields.ACCEPTED_TRANSFER_TEXT, userId) + " " + langService.getMessage(LangFields.LINK_TEXT, userId) + sender.getLink(groups.get(0).getGroupId()));
+                }
+            } else {
+                user.setSubscriptionEndTime(user.getSubscriptionEndTime().plusMonths(month));
+                sender.sendMessage(transferUserid, langService.getMessage(LangFields.ACCEPTED_TRANSFER_TEXT, userId));
+            }
+            user.setMethod(PaymentMethod.TRANSFER);
+            userRepository.save(user);
+
+            commonUtils.setState(userId, State.ADMIN_MENU);
+            sender.sendMessage(userId, langService.getMessage(LangFields.END_TRANSFER_TEXT, userId), buttonService.adminMenu(userId, commonUtils.getUser(userId).getAdmin()));
+        } catch (NumberFormatException e) {
+            sender.sendMessage(userId, langService.getMessage(LangFields.EXCEPTION_TRANSFER_NUMBER_TEXT, userId));
+        }
+    }
+
+    private void backToTransferUserAmount(Long userId) {
+        commonUtils.setState(userId, State.SENDING_TRANSFER_USER_AMOUNT);
+        sender.sendMessage(userId, langService.getMessage(LangFields.SEND_TRANSFER_USER_AMOUNT_TEXT, userId));
+    }
+
+    private void checkTransferAmount(Message message) {
+        Long userId = message.getFrom().getId();
+        try {
+            long amount = Long.parseLong(message.getText());
+
+            Transaction transaction = commonUtils.getTransaction(userId);
+            transaction.setAmount(amount);
+
+            commonUtils.setState(userId, State.SENDING_TRANSFER_MONTHS_AMOUNT);
+            sender.sendMessage(userId, langService.getMessage(LangFields.SEND_TRANSFER_USER_MONTHS_TEXT, userId));
+        } catch (NumberFormatException e) {
+            sender.sendMessage(userId, langService.getMessage(LangFields.EXCEPTION_TRANSFER_NUMBER_TEXT, userId));
+        }
+    }
+
+    private void checkTransferUserId(Message message) {
+        Long userId = message.getFrom().getId();
+        try {
+            long transferUserId = Long.parseLong(message.getText());
+            if (!userRepository.existsById(transferUserId)) {
+                sender.sendMessage(userId, langService.getMessage(LangFields.USER_IS_NOT_EXISTS_TEXT, userId));
+                return;
+            }
+
+            Transaction transaction = commonUtils.getTransaction(userId);
+            transaction.setMethod(PaymentMethod.TRANSFER);
+            transaction.setUserId(transferUserId);
+
+            commonUtils.setState(userId, State.SENDING_TRANSFER_USER_AMOUNT);
+            sender.sendMessage(userId, langService.getMessage(LangFields.SEND_TRANSFER_USER_AMOUNT_TEXT, userId));
+        } catch (NumberFormatException e) {
+            sender.sendMessage(userId, langService.getMessage(LangFields.EXCEPTION_TRANSFER_NUMBER_TEXT, userId));
         }
     }
 
@@ -169,6 +263,12 @@ public class MessageServiceImpl implements MessageService {
             sender.sendMessage(userId, langService.getMessage(LangFields.ADMIN_ACCESS_DENIDED, userId).formatted(5, user.getAdmin()));
             return;
         }
+        List<User> admins = userRepository.findAllByAdminAfter(0);
+        StringBuilder sb = new StringBuilder();
+        for (User admin : admins) {
+            sb.append(getChatToString(sender.getChat(admin.getId()))).append(" - ").append(admin.getAdmin()).append("\n");
+        }
+        sender.sendMessage(userId, sb.toString());
     }
 
     private void addWithTransfer(Long userId) {
@@ -177,6 +277,8 @@ public class MessageServiceImpl implements MessageService {
             sender.sendMessage(userId, langService.getMessage(LangFields.ADMIN_ACCESS_DENIDED, userId).formatted(4, user.getAdmin()));
             return;
         }
+        user.setState(State.SENDING_TRANSFER_USER_ID);
+        sender.sendMessage(userId, langService.getMessage(LangFields.SEND_TRANSFER_USER_ID_TEXT, userId), buttonService.withString(List.of(langService.getMessage(LangFields.BACK_TEXT, userId))));
     }
 
     private void screenshotsList(Long userId) {
@@ -531,6 +633,7 @@ public class MessageServiceImpl implements MessageService {
 
     private void start(Long userId) {
         commonUtils.setState(userId, State.START);
+        commonUtils.removeTransaction(userId);
         sender.sendMessage(userId, langService.getMessage(LangFields.HELLO, userId), buttonService.start(userId));
     }
 }
