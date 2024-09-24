@@ -5,6 +5,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import uz.pdp.apptelegrambotautopayment.enums.Lang;
 import uz.pdp.apptelegrambotautopayment.enums.State;
+import uz.pdp.apptelegrambotautopayment.model.Transaction;
 import uz.pdp.apptelegrambotautopayment.model.User;
 import uz.pdp.apptelegrambotautopayment.repository.UserRepository;
 
@@ -17,6 +18,7 @@ import java.util.concurrent.ConcurrentMap;
 @RequiredArgsConstructor
 public class CommonUtils {
     private final ConcurrentMap<Long, User> users = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Long, Transaction> transfers = new ConcurrentHashMap<>();
     private final UserRepository userRepository;
 
     public User getUser(Long userId) {
@@ -56,5 +58,17 @@ public class CommonUtils {
         List<User> list = users.values().stream().toList();
         userRepository.saveAll(list);
         users.clear();
+    }
+
+    public void putTransaction(Long userId, Transaction transaction) {
+        transfers.put(userId, transaction);
+    }
+
+    public Transaction getTransaction(Long userId) {
+        return transfers.computeIfAbsent(userId, k -> new Transaction());
+    }
+
+    public void removeTransaction(Long userid) {
+        transfers.remove(userid);
     }
 }

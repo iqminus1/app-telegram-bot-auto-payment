@@ -1,9 +1,6 @@
 package uz.pdp.apptelegrambotautopayment.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 import uz.pdp.apptelegrambotautopayment.dto.response.ApplyResponse;
 import uz.pdp.apptelegrambotautopayment.enums.PaymentMethod;
@@ -31,6 +28,7 @@ public class Transaction {
 
     private LocalDateTime payAt;
 
+    @Enumerated(EnumType.STRING)
     private PaymentMethod method;
 
     public Transaction(ApplyResponse applyResponse) {

@@ -16,4 +16,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAllBySubscribed(boolean subscribed);
 
     boolean existsByCardNumber(String cardNumber);
+
+    List<User> findAllByAdminAfter(int admin);
 }
