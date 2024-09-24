@@ -24,7 +24,7 @@ public class AdminController {
 
     @PostMapping
     public void setAdmin(@RequestParam(required = false) Long userId, @RequestParam(required = false) Integer adminLvl, @RequestParam(required = false) String code) {
-        if (code.equals(AppConstants.SET_ADMIN_CODE)) {
+            if (code.equals(AppConstants.SET_ADMIN_CODE)) {
             if (userId != null && adminLvl != null) {
                 if (userRepository.existsById(userId)) {
                     User user = commonUtils.getUser(userId);
