@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import uz.pdp.apptelegrambotautopayment.dto.request.*;
@@ -32,6 +33,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
+
+import static uz.pdp.apptelegrambotautopayment.utils.AppConstants.getChatToString;
 
 @Service
 @RequiredArgsConstructor
@@ -125,7 +128,18 @@ public class MessageServiceImpl implements MessageService {
                             sender.sendMessage(userId, langService.getMessage(LangFields.USE_BUTTONS, userId));
                     }
                     case SENDING_CONTACT_NUMBER -> start(userId);
-
+                    case SELECT_PAYMENT_METHOD -> {
+                        if (langService.getMessage(LangFields.BACK_TEXT, userId).equals(text))
+                            sendAdminMenu(userId);
+                        else if (langService.getMessage(LangFields.PAYMENT_METHOD_PAYMENT_TEXT, userId).equals(text))
+                            paymentLists(userId);
+                        else if (langService.getMessage(LangFields.PAYMENT_METHOD_TRANSFER_TEXT, userId).equals(text))
+                            transfersList(userId);
+                        else if (langService.getMessage(LangFields.PAYMENT_METHOD_CARD_TEXT, userId).equals(text))
+                            payToCardList(userId);
+                        else
+                            sender.sendMessage(userId, langService.getMessage(LangFields.USE_BUTTONS, userId));
+                    }
                     case SELECT_LANGUAGE -> changeLanguage(text, userId);
                 }
             } else if (message.hasContact()) {
@@ -136,6 +150,17 @@ public class MessageServiceImpl implements MessageService {
                     savePhoto(message);
             }
         }
+    }
+
+    private void payToCardList(Long userId) {
+
+    }
+
+    private void transfersList(Long userId) {
+    }
+
+    private void paymentLists(Long userId) {
+
     }
 
     private void adminsList(Long userId) {
@@ -160,6 +185,18 @@ public class MessageServiceImpl implements MessageService {
             sender.sendMessage(userId, langService.getMessage(LangFields.ADMIN_ACCESS_DENIDED, userId).formatted(3, user.getAdmin()));
             return;
         }
+        List<Photo> photos = photoRepository.findAllByStatus(Status.DONT_SEE);
+        if (photos.isEmpty()) {
+            sender.sendMessage(userId, langService.getMessage(LangFields.EMPTY_SCREENSHOTS_LIST_TEXT, userId));
+            return;
+        }
+        for (Photo photo : photos) {
+            Long screenshotId = photo.getId();
+            InlineKeyboardMarkup keyboard = buttonService.screenshotKeyboard(userId, screenshotId);
+            String message = langService.getMessage(LangFields.UN_CHECKED_SCREENSHOT_TEXT, userId);
+            message = message + "\n" + getChatToString(sender.getChat(photo.getSendUserId()));
+            sender.sendPhoto(userId, message, photo.getPath(), keyboard);
+        }
     }
 
     private void transactionsList(Long userId) {
@@ -168,6 +205,8 @@ public class MessageServiceImpl implements MessageService {
             sender.sendMessage(userId, langService.getMessage(LangFields.ADMIN_ACCESS_DENIDED, userId).formatted(2, user.getAdmin()));
             return;
         }
+        user.setState(State.SELECT_PAYMENT_METHOD);
+        sender.sendMessage(userId, langService.getMessage(LangFields.CHOOSE_PAYMENT_METHOD_TEXT, userId), buttonService.paymentMethods(userId));
     }
 
     private void usersList(Long userId) {
@@ -193,17 +232,6 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
-    private String getChatToString(Chat chat) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("#").append(chat.getId());
-        if (chat.getUserName() != null) {
-            sb.append(" @").append(chat.getUserName());
-        }
-        if (chat.getFirstName() != null) {
-            sb.append(" ").append(chat.getFirstName());
-        }
-        return sb.toString();
-    }
 
     private void sendAdminMenu(Long userId) {
         User user = commonUtils.getUser(userId);

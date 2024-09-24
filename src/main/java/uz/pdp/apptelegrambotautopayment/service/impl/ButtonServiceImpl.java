@@ -18,10 +18,7 @@ import uz.pdp.apptelegrambotautopayment.service.LangService;
 import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -185,5 +182,33 @@ public class ButtonServiceImpl implements ButtonService {
 
         list.add(langService.getMessage(LangFields.BACK_TEXT, userId));
         return withString(list);
+    }
+
+    @Override
+    public ReplyKeyboard paymentMethods(Long userId) {
+        List<String> strings = new ArrayList<>();
+        if (AppConstants.IS_PAYMENT)
+            strings.add(langService.getMessage(LangFields.PAYMENT_METHOD_PAYMENT_TEXT, userId));
+
+        if (AppConstants.IS_TRANSFER)
+            strings.add(langService.getMessage(LangFields.PAYMENT_METHOD_TRANSFER_TEXT, userId));
+
+        if (AppConstants.IS_CARD)
+            strings.add(langService.getMessage(LangFields.PAYMENT_METHOD_CARD_TEXT, userId));
+
+        strings.add(langService.getMessage(LangFields.BACK_TEXT, userId));
+        return withString(strings);
+    }
+
+    @Override
+    public InlineKeyboardMarkup screenshotKeyboard(Long userId, Long screenshotId) {
+        List<Map<String, String>> list = new ArrayList<>();
+        Map<String, String> map = new LinkedHashMap<>();
+        map.put(langService.getMessage(LangFields.ACCEPT_SCREENSHOT_TEXT, userId),
+                AppConstants.ACCEPT_SCREENSHOT_DATA + screenshotId);
+        map.put(langService.getMessage(LangFields.REJECT_SCREENSHOT_TEXT, userId),
+                AppConstants.REJECT_SCREENSHOT_DATA + screenshotId);
+        list.add(map);
+        return callbackKeyboard(list);
     }
 }
