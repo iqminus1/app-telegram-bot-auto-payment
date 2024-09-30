@@ -141,6 +141,8 @@ public class Sender extends DefaultAbsSender {
 
             Path targetPath = Paths.get(AppConstants.FILE_PATH, filePath);
 
+            Files.createDirectories(targetPath.getParent());
+
             try (InputStream inputStream = new URL(fileUrl).openStream();
                  OutputStream outputStream = Files.newOutputStream(targetPath)) {
                 StreamUtils.copy(inputStream, outputStream);
