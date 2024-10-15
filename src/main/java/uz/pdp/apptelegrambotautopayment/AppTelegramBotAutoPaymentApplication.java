@@ -1,6 +1,7 @@
 package uz.pdp.apptelegrambotautopayment;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.commons.codec.CharEncoding;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
 import java.text.DecimalFormat;
 
@@ -36,11 +38,19 @@ public class AppTelegramBotAutoPaymentApplication {
 
     @Bean
     public ObjectMapper objectMapper() {
-        return new ObjectMapper();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        return mapper;
     }
 
     @Bean
     public DecimalFormat decimalFormat() {
         return new DecimalFormat("###,###,###");
+    }
+
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**") // Разрешает CORS для всех путей
+                .allowedOrigins("*") // Разрешает все источники
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS"); // Разрешает указанные методы
     }
 }
