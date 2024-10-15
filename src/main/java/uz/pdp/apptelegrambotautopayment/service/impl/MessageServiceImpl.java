@@ -3,6 +3,7 @@ package uz.pdp.apptelegrambotautopayment.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Chat;
+import org.telegram.telegrambots.meta.api.objects.Document;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -26,7 +27,6 @@ import uz.pdp.apptelegrambotautopayment.service.MessageService;
 import uz.pdp.apptelegrambotautopayment.service.telegram.Sender;
 import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
-import uz.pdp.apptelegrambotautopayment.utils.Temp;
 
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
@@ -43,7 +43,6 @@ public class MessageServiceImpl implements MessageService {
     private final LangService langService;
     private final ButtonService buttonService;
     private final Sender sender;
-    private final Temp temp;
     private final AtmosService atmosService;
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
@@ -170,8 +169,23 @@ public class MessageServiceImpl implements MessageService {
             } else if (message.hasPhoto()) {
                 if (commonUtils.getState(message.getFrom().getId()).equals(State.PAY_CARD_NUMBER))
                     savePhoto(message);
+            } else if (message.hasDocument()) {
+                if (commonUtils.getState(message.getFrom().getId()).equals(State.PAY_CARD_NUMBER))
+                    saveDocument(message);
             }
         }
+    }
+
+    private void saveDocument(Message message) {
+        Long userId = message.getFrom().getId();
+        Document document = message.getDocument();
+
+        String filePath = sender.getFilePath(document.getFileId());
+        photoRepository.save(new Photo(null, userId, filePath, Status.DONT_SEE, null));
+
+        commonUtils.setState(userId, State.START);
+        sender.sendMessage(userId, langService.getMessage(LangFields.SCREENSHOT_SAVED_TEXT, userId), buttonService.start(userId));
+
     }
 
     private void checkTransferMonths(Message message) {
@@ -307,7 +321,7 @@ public class MessageServiceImpl implements MessageService {
             InlineKeyboardMarkup keyboard = buttonService.screenshotKeyboard(userId, screenshotId);
             String message = langService.getMessage(LangFields.UN_CHECKED_SCREENSHOT_TEXT, userId);
             message = message + "\n" + getChatToString(sender.getChat(photo.getSendUserId()));
-            sender.sendPhoto(userId, message, photo.getPath(), keyboard);
+            sender.sendDocument(userId, message, photo.getPath(), keyboard);
         }
     }
 
@@ -361,7 +375,7 @@ public class MessageServiceImpl implements MessageService {
             return;
         }
         PhotoSize photoSize = photo.stream().max(Comparator.comparing(PhotoSize::getFileSize)).get();
-        String filePath = sender.getFilePath(photoSize);
+        String filePath = sender.getFilePath(photoSize.getFileId());
         photoRepository.save(new Photo(null, userId, filePath, Status.DONT_SEE, null));
 
         commonUtils.setState(userId, State.START);

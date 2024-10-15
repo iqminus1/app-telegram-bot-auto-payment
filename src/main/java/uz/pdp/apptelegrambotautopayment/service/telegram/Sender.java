@@ -6,10 +6,14 @@ import org.telegram.telegrambots.bots.DefaultAbsSender;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.*;
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageCaption;
-import org.telegram.telegrambots.meta.api.objects.*;
+import org.telegram.telegrambots.meta.api.objects.Chat;
+import org.telegram.telegrambots.meta.api.objects.ChatInviteLink;
+import org.telegram.telegrambots.meta.api.objects.File;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -127,8 +131,8 @@ public class Sender extends DefaultAbsSender {
         }
     }
 
-    public String getFilePath(PhotoSize photoSize) {
-        GetFile getFile = new GetFile(photoSize.getFileId());
+    public String getFilePath(String fileId) {
+        GetFile getFile = new GetFile(fileId);
         try {
             File execute = execute(getFile);
 
@@ -187,5 +191,16 @@ public class Sender extends DefaultAbsSender {
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void sendDocument(Long userId, String caption, String path, InlineKeyboardMarkup keyboard) {
+        SendDocument document = new SendDocument();
+        document.setCaption(caption);
+        InputFile photo = new InputFile();
+        photo.setMedia(new java.io.File(path));
+        document.setDocument(photo);
+        document.setChatId(userId);
+        document.setReplyMarkup(keyboard);
+        executeAsync(document);
     }
 }

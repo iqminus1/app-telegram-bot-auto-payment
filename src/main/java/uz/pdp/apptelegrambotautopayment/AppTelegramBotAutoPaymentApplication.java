@@ -47,10 +47,4 @@ public class AppTelegramBotAutoPaymentApplication {
     public DecimalFormat decimalFormat() {
         return new DecimalFormat("###,###,###");
     }
-
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") // Разрешает CORS для всех путей
-                .allowedOrigins("*") // Разрешает все источники
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS"); // Разрешает указанные методы
-    }
 }
