@@ -127,14 +127,16 @@ public class ButtonServiceImpl implements ButtonService {
 
         if (user.isSubscribed()) {
             String history = langService.getMessage(LangFields.BUTTON_PAYMENT_HISTORY_TEXT, userId);
-
-            //payment status
-            String paymentStatus = langService.getMessage(LangFields.START_PAYMENT_TEXT, userId);
-            if (user.isPayment()) {
-                paymentStatus = langService.getMessage(LangFields.STOP_PAYMENT_TEXT, userId);
-            }
             list.add(history);
-            list.add(paymentStatus);
+
+            if (user.getMethod().equals(PaymentMethod.PAYMENT)) {
+                //payment status
+                String paymentStatus = langService.getMessage(LangFields.START_PAYMENT_TEXT, userId);
+                if (user.isPayment()) {
+                    paymentStatus = langService.getMessage(LangFields.STOP_PAYMENT_TEXT, userId);
+                }
+                list.add(paymentStatus);
+            }
         }
 //        String changeLang = langService.getMessage(LangFields.BUTTON_LANG_SETTINGS, userId);
         return withString(list);
