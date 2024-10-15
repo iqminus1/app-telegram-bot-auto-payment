@@ -51,8 +51,9 @@ public class TransactionController {
 
     @GetMapping("/monthly")
     public ResponseEntity<?> getMonthly(@RequestParam int year, @RequestParam int month) {
-        String format = String.format("%s/%s", month, year);
-        List<Transaction> result = transactionRepository.findAllByYearMonth(format);
+        LocalDateTime startDate = LocalDateTime.of(year, month, 1, 0, 0);
+        LocalDateTime endDate = startDate.plusMonths(1);
+        List<Transaction> result = transactionRepository.findAllByYearAndMonth(startDate, endDate);
         return ResponseEntity.ok(result);
     }
 

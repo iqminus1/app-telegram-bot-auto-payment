@@ -58,7 +58,7 @@ public class CallbackServiceImpl implements CallbackService {
         message = message + "\n" + getChatToString(sender.getChat(userId));
         sender.changeCaption(userId, messageId, message);
 
-        sender.sendMessage(userId, langService.getMessage(LangFields.SCREENSHOT_IS_INVALID_TEXT, screenshot.getSendUserId()));
+        sender.sendMessage(screenshot.getSendUserId(), langService.getMessage(LangFields.SCREENSHOT_IS_INVALID_TEXT, screenshot.getSendUserId()));
     }
 
     private void acceptScreenshot(CallbackQuery callbackQuery) {
@@ -79,7 +79,7 @@ public class CallbackServiceImpl implements CallbackService {
 
         List<Group> groups = groupRepository.findAll();
         if (groups.size() == 1) {
-            sender.sendMessage(userId, langService.getMessage(LangFields.SCREENSHOT_IS_VALID_TEXT, screenshot.getSendUserId()) + " -> " + sender.getLink(groups.get(0).getGroupId()));
+            sender.sendMessage(user.getId(), langService.getMessage(LangFields.SCREENSHOT_IS_VALID_TEXT, screenshot.getSendUserId()) + " -> " + sender.getLink(groups.get(0).getGroupId()));
         }
     }
 
