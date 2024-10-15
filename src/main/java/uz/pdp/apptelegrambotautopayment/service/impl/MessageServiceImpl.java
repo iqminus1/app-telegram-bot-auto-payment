@@ -454,7 +454,7 @@ public class MessageServiceImpl implements MessageService {
             sb.append(size - i++).append(". ")
                     .append(transaction.getPayAt().toLocalDate()).append(" ")
                     .append(transaction.getPayAt().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss")))
-                    .append(" - ").append(decimalFormat.format(transaction.getAmount() / 100)).append(" ").append(som).append("\n");
+                    .append(" - ").append(decimalFormat.format(transaction.getAmount())).append(" ").append(som).append("\n");
         }
         String message = langService.getMessage(LangFields.LIST_PAYMENT_HISTORY_TEXT, userId);
         sender.sendMessage(userId, message + sb);

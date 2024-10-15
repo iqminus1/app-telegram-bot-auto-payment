@@ -70,7 +70,7 @@ public class CallbackServiceImpl implements CallbackService {
         message = message + "\n" + getChatToString(sender.getChat(userId));
         sender.changeCaption(userId, messageId, message);
 
-        Transaction transaction = new Transaction(null, null, screenshot.getId().toString(), userId, AppConstants.PRICE, LocalDateTime.now(), PaymentMethod.CARD);
+        Transaction transaction = new Transaction(null, null, screenshot.getId().toString(), screenshot.getSendUserId(), AppConstants.PRICE, LocalDateTime.now(), PaymentMethod.CARD);
         transactionRepository.save(transaction);
 
         User user = commonUtils.getUser(screenshot.getSendUserId());
