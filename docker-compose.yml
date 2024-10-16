@@ -25,6 +25,8 @@ services:
     ports:
       - "888:888"
     restart: always
+    volumes:
+      - /root/project/app-telegram-bot-auto-payment/files:/app/files
 
 volumes:
   postgres-data:

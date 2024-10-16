@@ -9,7 +9,9 @@ public interface AppConstants {
     String BOT_TOKEN = "6027918055:AAHfPXcPeBad31_qqqrndyqc5fjpTcqAuG0";
     String BOT_USERNAME = "upload_your_work_bot";
     String START = "/start";
-    Long PRICE = 1000L;
+    Long PRICE_ONCE = 49000L;
+    Long PRICE_TWICE = 89000L;
+    String OFERTA_I_AGREE_DATA = "iAgree";
 
     //Auth Atmos
     String CLIENT_ID = "your_client_id";
@@ -30,9 +32,9 @@ public interface AppConstants {
     int ERROR_LENGTH = ERROR_TEXT.length();
     String SET_ADMIN_CODE = "2456FA55fJ1235GKNBNMKAU";
 
-    boolean IS_PAYMENT = true;
+    boolean IS_PAYMENT = false;
 
-    boolean IS_TRANSFER = true;
+    boolean IS_TRANSFER = false;
 
     boolean IS_CARD = true;
 
