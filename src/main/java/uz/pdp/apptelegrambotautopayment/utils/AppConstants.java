@@ -43,7 +43,7 @@ public interface AppConstants {
     String ACCEPT_SCREENSHOT_DATA = "acceptScreenshot:";
     String REJECT_SCREENSHOT_DATA = "rejectScreenshot:";
     String PHOTO_PATH = "C:\\Users\\User\\IdeaProjects\\app-telegram-bot-auto-payment\\files/first_photo.jpg";
-    String OFERTA_LINK = "https://daryo.uz/";
+    String OFERTA_LINK = "https://behad.uz/marifat/oferta.pdf";
 
     static User setSubscriptionTime(User user) {
         return setSubscriptionTime(user, 1);
