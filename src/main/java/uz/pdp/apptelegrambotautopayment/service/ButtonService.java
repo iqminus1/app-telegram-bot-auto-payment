@@ -29,4 +29,6 @@ public interface ButtonService {
     ReplyKeyboard paymentMethods(Long userId);
 
     InlineKeyboardMarkup screenshotKeyboard(Long userId, Long screenshotId);
+
+    InlineKeyboardMarkup ofertaButton(Long userId);
 }

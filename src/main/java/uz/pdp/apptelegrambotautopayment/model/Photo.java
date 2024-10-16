@@ -25,4 +25,6 @@ public class Photo {
     private Status status;
 
     private LocalDateTime activeAt;
+
+    private Integer tariff;
 }

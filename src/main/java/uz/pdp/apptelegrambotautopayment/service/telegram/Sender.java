@@ -9,6 +9,7 @@ import org.telegram.telegrambots.meta.api.methods.groupadministration.*;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageCaption;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.ChatInviteLink;
@@ -170,7 +171,7 @@ public class Sender extends DefaultAbsSender {
         }
     }
 
-    public void sendPhoto(Long userId, String caption, String path, InlineKeyboardMarkup keyboard) {
+    public void sendPhoto(Long userId, String caption, String path, ReplyKeyboard keyboard) {
         SendPhoto sendPhoto = new SendPhoto();
         sendPhoto.setCaption(caption);
         InputFile photo = new InputFile();
@@ -202,5 +203,13 @@ public class Sender extends DefaultAbsSender {
         document.setChatId(userId);
         document.setReplyMarkup(keyboard);
         executeAsync(document);
+    }
+
+    public void deleteMessage(Long userId, Integer messageId) {
+        try {
+            executeAsync(new DeleteMessage(userId.toString(), messageId));
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
