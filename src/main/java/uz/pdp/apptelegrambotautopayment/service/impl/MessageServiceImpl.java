@@ -189,7 +189,7 @@ public class MessageServiceImpl implements MessageService {
     private void oferta(Long userId) {
         String message = langService.getMessage(LangFields.OFERTA_TEXT, userId);
         InlineKeyboardMarkup button = buttonService.ofertaButton(userId);
-        sender.sendMessage(userId, message, button);
+        sender.sendMessageWithMarkdown(userId, message, button);
     }
 
     private void saveDocument(Message message) {

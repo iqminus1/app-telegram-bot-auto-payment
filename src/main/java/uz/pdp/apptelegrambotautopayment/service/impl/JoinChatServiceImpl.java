@@ -41,7 +41,7 @@ public class JoinChatServiceImpl implements JoinChatService {
 
         if (user.getSubscriptionEndTime() != null) {
             if (user.getSubscriptionEndTime().isBefore(LocalDateTime.now())) {
-                sender.sendMessage(userId, langService.getMessage(LangFields.PAID_GROUP_TEXT, chatJoinRequest.getUser().getLanguageCode()).formatted(name));
+                sender.sendMessage(userId, langService.getMessage(LangFields.PAID_GROUP_TEXT, chatJoinRequest.getUser().getLanguageCode()).formatted(name), buttonService.start(userId));
             } else {
                 sender.acceptJoinRequest(userId, groupId);
                 user.setSubscribed(true);
