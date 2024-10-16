@@ -14,8 +14,8 @@ public interface AppConstants {
     String OFERTA_I_AGREE_DATA = "iAgree";
 
     //Auth Atmos
-    String CLIENT_ID = "1NYLOwPgYX2VBH_ge1qCUCTbLeoa";
-    String CLIENT_SECRET = "E4V21PRko5MlP_gQRihngfc_YdUa";
+    String CLIENT_ID = "client_id";
+    String CLIENT_SECRET = "secret_key";
 
     //ATMOS API URLs
     String ATMOS_AUTH_URL = "https://partner.atmos.uz/token";
