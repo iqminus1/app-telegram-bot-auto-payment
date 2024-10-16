@@ -26,8 +26,7 @@ public interface AppConstants {
     String ATMOS_APPLY_URL = "https://partner.atmos.uz/merchant/pay/apply-ofd";
     String ATMOS_REMOVE_CARD_URL = "https://partner.atmos.uz/partner/remove-card";
 
-    Integer STORE_ID = 7977;
-    long SUBSCRIPTION_MONTH = 1;
+    Integer STORE_ID = 1783;
     String ERROR_TEXT = "STPIMS-ERR-";
     int ERROR_LENGTH = ERROR_TEXT.length();
     String SET_ADMIN_CODE = "2456FA55fJ1235GKNBNMKAU";
