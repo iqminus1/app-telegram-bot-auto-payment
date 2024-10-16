@@ -22,6 +22,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
@@ -62,6 +64,9 @@ public class TransactionController {
         Photo photo = photoRepository.findById(id).orElseThrow();
         try {
             Path path = Path.of(photo.getPath());
+            String contentType = Files.probeContentType(path);
+            resp.setContentType(Objects.requireNonNullElse(contentType, "application/octet-stream"));
+            resp.setHeader("Content-Disposition", "attachment; filename=\"" + UUID.randomUUID() + "\"");
             Files.copy(path, resp.getOutputStream());
         } catch (IOException e) {
             throw new RuntimeException(e);
