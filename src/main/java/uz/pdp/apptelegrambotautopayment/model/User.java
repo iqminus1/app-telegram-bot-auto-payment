@@ -51,4 +51,6 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private PaymentMethod method;
+
+    private Boolean agreed;
 }
