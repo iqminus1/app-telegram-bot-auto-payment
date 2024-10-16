@@ -6,16 +6,16 @@ import uz.pdp.apptelegrambotautopayment.model.User;
 import java.time.LocalDateTime;
 
 public interface AppConstants {
-    String BOT_TOKEN = "6027918055:AAHfPXcPeBad31_qqqrndyqc5fjpTcqAuG0";
-    String BOT_USERNAME = "upload_your_work_bot";
+    String BOT_TOKEN = "7320858493:AAFtIOr8bofMTKFuMjegu8SVuxxrdTMYagI";
+    String BOT_USERNAME = "manager_groups_v1_bot";
     String START = "/start";
     Long PRICE_ONCE = 49000L;
     Long PRICE_TWICE = 89000L;
     String OFERTA_I_AGREE_DATA = "iAgree";
 
     //Auth Atmos
-    String CLIENT_ID = "your_client_id";
-    String CLIENT_SECRET = "your_client_secret";
+    String CLIENT_ID = "1NYLOwPgYX2VBH_ge1qCUCTbLeoa";
+    String CLIENT_SECRET = "E4V21PRko5MlP_gQRihngfc_YdUa";
 
     //ATMOS API URLs
     String ATMOS_AUTH_URL = "https://partner.atmos.uz/token";
