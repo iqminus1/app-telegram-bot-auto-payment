@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentMap;
 public class CommonUtils {
     private final ConcurrentMap<Long, User> users = new ConcurrentHashMap<>();
     private final ConcurrentMap<Long, Transaction> transfers = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Long, Integer> tariffId = new ConcurrentHashMap<>();
     private final UserRepository userRepository;
 
     public User getUser(Long userId) {
@@ -68,6 +69,18 @@ public class CommonUtils {
 
     public void removeTransaction(Long userid) {
         transfers.remove(userid);
+    }
+
+    public Integer getTariffId(Long userId) {
+        return tariffId.get(userId);
+    }
+
+    public void setTariffId(Long userId, Integer tariff) {
+        tariffId.put(userId, tariff);
+    }
+
+    public void removeTariffId(Long userId) {
+        tariffId.remove(userId);
     }
 
     @PreDestroy

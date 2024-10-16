@@ -41,12 +41,18 @@ public interface AppConstants {
     String FILE_PATH = "C:/Users/User/IdeaProjects/app-telegram-bot-auto-payment/files/";
     String ACCEPT_SCREENSHOT_DATA = "acceptScreenshot:";
     String REJECT_SCREENSHOT_DATA = "rejectScreenshot:";
+    String PHOTO_PATH = "C:\\Users\\User\\IdeaProjects\\app-telegram-bot-auto-payment\\files/first_photo.jpg";
+    String OFERTA_LINK = "https://daryo.uz/";
 
     static User setSubscriptionTime(User user) {
+        return setSubscriptionTime(user, 1);
+    }
+
+    static User setSubscriptionTime(User user, Integer month) {
         if (user.getSubscriptionEndTime().isBefore(LocalDateTime.now())) {
-            user.setSubscriptionEndTime(LocalDateTime.now().plusMonths(SUBSCRIPTION_MONTH));
+            user.setSubscriptionEndTime(LocalDateTime.now().plusMonths(month));
         } else
-            user.setSubscriptionEndTime(user.getSubscriptionEndTime().plusMonths(SUBSCRIPTION_MONTH));
+            user.setSubscriptionEndTime(user.getSubscriptionEndTime().plusMonths(month));
         return user;
     }
 

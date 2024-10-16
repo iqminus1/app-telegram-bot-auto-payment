@@ -56,7 +56,11 @@ public class MessageServiceImpl implements MessageService {
             if (message.hasText()) {
                 String text = message.getText();
                 Long userId = message.getFrom().getId();
-                if (text.equals(AppConstants.START)) {
+                User user = commonUtils.getUser(userId);
+                if (user.getAgreed() == null || !user.getAgreed()) {
+                    oferta(userId);
+                    return;
+                } else if (text.equals(AppConstants.START)) {
                     start(userId);
                     return;
                 }
@@ -81,6 +85,12 @@ public class MessageServiceImpl implements MessageService {
                             sendPayCardNumber(userId);
                         } else if (langService.getMessage(LangFields.ADMIN_MENU_TEXT, userId).equals(text)) {
                             sendAdminMenu(userId);
+                        } else if (langService.getMessage(LangFields.ONCE, userId).equals(text)) {
+                            commonUtils.setTariffId(userId, 1);
+                            sendPayCardNumber(userId);
+                        } else if (langService.getMessage(LangFields.TWICE, userId).equals(text)) {
+                            commonUtils.setTariffId(userId, 2);
+                            sendPayCardNumber(userId);
                         } else
                             sender.sendMessage(userId, langService.getMessage(LangFields.USE_BUTTONS, userId));
                     }
@@ -176,16 +186,26 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
+    private void oferta(Long userId) {
+        String message = langService.getMessage(LangFields.OFERTA_TEXT, userId);
+        InlineKeyboardMarkup button = buttonService.ofertaButton(userId);
+        sender.sendMessage(userId, message, button);
+    }
+
     private void saveDocument(Message message) {
         Long userId = message.getFrom().getId();
         Document document = message.getDocument();
 
         String filePath = sender.getFilePath(document.getFileId());
-        photoRepository.save(new Photo(null, userId, filePath, Status.DONT_SEE, null));
+        savePhotoAndSendSuccess(userId, filePath);
+    }
+
+    private void savePhotoAndSendSuccess(Long userId, String filePath) {
+        photoRepository.save(new Photo(null, userId, filePath, Status.DONT_SEE, null, commonUtils.getTariffId(userId)));
 
         commonUtils.setState(userId, State.START);
+        commonUtils.removeTariffId(userId);
         sender.sendMessage(userId, langService.getMessage(LangFields.SCREENSHOT_SAVED_TEXT, userId), buttonService.start(userId));
-
     }
 
     private void checkTransferMonths(Message message) {
@@ -320,7 +340,10 @@ public class MessageServiceImpl implements MessageService {
             Long screenshotId = photo.getId();
             InlineKeyboardMarkup keyboard = buttonService.screenshotKeyboard(userId, screenshotId);
             String message = langService.getMessage(LangFields.UN_CHECKED_SCREENSHOT_TEXT, userId);
-            message = message + "\n" + getChatToString(sender.getChat(photo.getSendUserId()));
+            String tariff = "Oylik";
+            if (photo.getTariff() == 2)
+                tariff = "2 oylik";
+            message = message + "\n" + getChatToString(sender.getChat(photo.getSendUserId())) + "\n" + "Tariff: " + tariff;
             sender.sendDocument(userId, message, photo.getPath(), keyboard);
         }
     }
@@ -376,10 +399,7 @@ public class MessageServiceImpl implements MessageService {
         }
         PhotoSize photoSize = photo.stream().max(Comparator.comparing(PhotoSize::getFileSize)).get();
         String filePath = sender.getFilePath(photoSize.getFileId());
-        photoRepository.save(new Photo(null, userId, filePath, Status.DONT_SEE, null));
-
-        commonUtils.setState(userId, State.START);
-        sender.sendMessage(userId, langService.getMessage(LangFields.SCREENSHOT_SAVED_TEXT, userId), buttonService.start(userId));
+        savePhotoAndSendSuccess(userId, filePath);
 
     }
 
@@ -390,7 +410,10 @@ public class MessageServiceImpl implements MessageService {
         PaymentMethod method = commonUtils.getUser(userId).getMethod();
         if (method == null || method.equals(PaymentMethod.CARD)) {
             String text = langService.getMessage(LangFields.ADMIN_CARD_NUMBER_TEXT, userId);
-            String price = decimalFormat.format(AppConstants.PRICE);
+            String price = decimalFormat.format(AppConstants.PRICE_ONCE);
+            if (commonUtils.getTariffId(userId) == 2)
+                price = decimalFormat.format(AppConstants.PRICE_TWICE);
+
             String som = langService.getMessage(LangFields.SOM_TEXT, userId);
             String withCardNumber = text.formatted(AppConstants.CARD_NAME, AppConstants.CARD_NUMBER, (price + " " + som));
             ReplyKeyboard backButton = buttonService.withString(List.of(langService.getMessage(LangFields.BACK_TEXT, userId)));
@@ -657,6 +680,6 @@ public class MessageServiceImpl implements MessageService {
     private void start(Long userId) {
         commonUtils.setState(userId, State.START);
         commonUtils.removeTransaction(userId);
-        sender.sendMessage(userId, langService.getMessage(LangFields.HELLO, userId), buttonService.start(userId));
+        sender.sendPhoto(userId, langService.getMessage(LangFields.HELLO, userId), AppConstants.PHOTO_PATH, buttonService.start(userId));
     }
 }

@@ -121,7 +121,8 @@ public class ButtonServiceImpl implements ButtonService {
 
         if (AppConstants.IS_CARD) {
             if (user.getMethod() == null || user.getMethod().equals(PaymentMethod.CARD)) {
-                list.add(langService.getMessage(LangFields.PAY_CARD_NUMBER_TEXT, userId));
+                list.add(langService.getMessage(LangFields.ONCE, userId));
+                list.add(langService.getMessage(LangFields.TWICE, userId));
             }
         }
 
@@ -212,5 +213,19 @@ public class ButtonServiceImpl implements ButtonService {
                 AppConstants.REJECT_SCREENSHOT_DATA + screenshotId);
         list.add(map);
         return callbackKeyboard(list);
+    }
+
+    @Override
+    public InlineKeyboardMarkup ofertaButton(Long userId) {
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        InlineKeyboardButton link = new InlineKeyboardButton();
+        link.setUrl(AppConstants.OFERTA_LINK);
+        link.setText(langService.getMessage(LangFields.OFERTA_LINK_TEXT, userId));
+
+        InlineKeyboardButton iAgree = new InlineKeyboardButton();
+        iAgree.setText(langService.getMessage(LangFields.OFERTA_AGREE_TEXT, userId));
+        iAgree.setCallbackData(AppConstants.OFERTA_I_AGREE_DATA);
+        markup.setKeyboard(List.of(List.of(link), List.of(iAgree)));
+        return markup;
     }
 }

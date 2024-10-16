@@ -12,7 +12,7 @@ import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
 @Getter
 public class TransactionRequest {
     @JsonProperty("amount")
-    private final Long amount = AppConstants.PRICE * 100;
+    private final Long amount = AppConstants.PRICE_ONCE * 100;
 
     @JsonProperty("terminal_id")
     private final String terminalId = null;
