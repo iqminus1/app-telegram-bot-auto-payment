@@ -179,6 +179,7 @@ public class Sender extends DefaultAbsSender {
         sendPhoto.setPhoto(photo);
         sendPhoto.setChatId(userId);
         sendPhoto.setReplyMarkup(keyboard);
+        sendPhoto.setParseMode("Markdown");
         executeAsync(sendPhoto);
     }
 
