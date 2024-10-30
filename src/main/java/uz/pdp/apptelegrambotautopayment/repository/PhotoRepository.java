@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface PhotoRepository extends JpaRepository<Photo, Long> {
     List<Photo> findAllByStatus(Status status);
+
+    Long countByStatus(Status status);
 }

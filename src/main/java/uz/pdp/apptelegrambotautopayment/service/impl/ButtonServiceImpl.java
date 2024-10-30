@@ -182,7 +182,7 @@ public class ButtonServiceImpl implements ButtonService {
 
         if (adminLvl >= 1)
             list.add(langService.getMessage(LangFields.USERS_LIST_TEXT, userId));
-
+        list.add("Hisobot");
         list.add(langService.getMessage(LangFields.BACK_TEXT, userId));
         return withString(list);
     }

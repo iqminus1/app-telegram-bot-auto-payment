@@ -141,6 +141,8 @@ public class MessageServiceImpl implements MessageService {
                             addWithTransfer(userId);
                         else if (text.equals(langService.getMessage(LangFields.ADMINS_LIST_TEXT, userId))) {
                             adminsList(userId);
+                        } else if (text.equals("Hisobot")) {
+                            report(userId);
                         } else
                             sender.sendMessage(userId, langService.getMessage(LangFields.USE_BUTTONS, userId));
                     }
@@ -190,6 +192,13 @@ public class MessageServiceImpl implements MessageService {
                     saveDocument(message);
             }
         }
+    }
+
+    private void report(Long userId) {
+        String sb = "Botdan foydalangan userlar soni: " + userRepository.count() + "\n\n" +
+                "Admin orqali tastiqlangan rasmlar soni: " +
+                photoRepository.countByStatus(Status.ACCEPT);
+        sender.sendMessage(userId, sb);
     }
 
     private void oferta(Long userId) {
