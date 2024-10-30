@@ -31,4 +31,6 @@ public interface ButtonService {
     InlineKeyboardMarkup screenshotKeyboard(Long userId, Long screenshotId);
 
     InlineKeyboardMarkup ofertaButton(Long userId);
+
+    ReplyKeyboard withWebApp(Long userId);
 }

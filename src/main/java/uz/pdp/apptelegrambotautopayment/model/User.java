@@ -1,9 +1,6 @@
 package uz.pdp.apptelegrambotautopayment.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 import uz.pdp.apptelegrambotautopayment.enums.Lang;
 import uz.pdp.apptelegrambotautopayment.enums.PaymentMethod;
@@ -27,8 +24,10 @@ public class User {
 
     private Lang lang;
 
+//    @Transient
     private String cardNumber;
 
+//    @Transient
     private String cardExpiry;
 
     private String transactionId;

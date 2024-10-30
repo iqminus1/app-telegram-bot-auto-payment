@@ -1,11 +1,9 @@
 package uz.pdp.apptelegrambotautopayment.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import uz.pdp.apptelegrambotautopayment.dto.UserDto;
 import uz.pdp.apptelegrambotautopayment.model.User;
 import uz.pdp.apptelegrambotautopayment.repository.UserRepository;
@@ -19,8 +17,8 @@ public class UserController {
     private final UserRepository userRepository;
 
     @GetMapping("/read-all")
-    public ResponseEntity<?> readAll() {
-        List<UserDto> result = userRepository.findAll().stream().map(this::toDTO).toList();
+    public ResponseEntity<?> readAll(@RequestParam Integer page, @RequestParam Integer size) {
+        List<UserDto> result = userRepository.findAll(PageRequest.of(page, size)).stream().map(this::toDTO).toList();
         return ResponseEntity.ok(result);
     }
 

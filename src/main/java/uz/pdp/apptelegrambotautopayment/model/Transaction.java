@@ -32,7 +32,7 @@ public class Transaction {
     private PaymentMethod method;
 
     public Transaction(ApplyResponse applyResponse) {
-        this.amount = applyResponse.getAmount();
+        this.amount = applyResponse.getAmount() / 100;
         this.userId = applyResponse.getUserId();
         this.transId = applyResponse.getTransId();
         this.successTransId = applyResponse.getSuccessTransId();
