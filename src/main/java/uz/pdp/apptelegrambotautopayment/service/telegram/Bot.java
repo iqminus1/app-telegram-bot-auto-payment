@@ -35,3 +35,4 @@ public class Bot extends TelegramLongPollingBot {
         return AppConstants.BOT_USERNAME;
     }
 }
+

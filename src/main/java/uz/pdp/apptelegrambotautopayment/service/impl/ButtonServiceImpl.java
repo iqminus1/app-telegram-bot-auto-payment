@@ -228,4 +228,20 @@ public class ButtonServiceImpl implements ButtonService {
         markup.setKeyboard(List.of(List.of(link), List.of(iAgree)));
         return markup;
     }
+
+    @Override
+    public ReplyKeyboard withWebApp(Long userId) {
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        List<InlineKeyboardButton> row = new ArrayList<>();
+
+        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton(langService.getMessage(LangFields.WEB_APP_BUTTON, userId));
+        inlineKeyboardButton.setWebApp(new WebAppInfo(AppConstants.WEB_APP_LINK + userId));
+        row.add(inlineKeyboardButton);
+        rows.add(row);
+
+        markup.setKeyboard(rows);
+        return markup;
+    }
 }

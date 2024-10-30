@@ -28,8 +28,14 @@ import uz.pdp.apptelegrambotautopayment.service.telegram.Sender;
 import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.text.DecimalFormat;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
@@ -194,14 +200,19 @@ public class MessageServiceImpl implements MessageService {
 
     private void saveDocument(Message message) {
         Long userId = message.getFrom().getId();
+        Integer tariffId = commonUtils.getTariffId(userId);
+
+        if (tariffId == null)
+            tariffId = 2;
+
         Document document = message.getDocument();
 
         String filePath = sender.getFilePath(document.getFileId());
-        savePhotoAndSendSuccess(userId, filePath);
+        savePhotoAndSendSuccess(userId, filePath, tariffId);
     }
 
-    private void savePhotoAndSendSuccess(Long userId, String filePath) {
-        photoRepository.save(new Photo(null, userId, filePath, Status.DONT_SEE, null, commonUtils.getTariffId(userId)));
+    private void savePhotoAndSendSuccess(Long userId, String filePath, Integer tariffId) {
+        photoRepository.save(new Photo(null, userId, filePath, Status.DONT_SEE, null, tariffId));
 
         commonUtils.setState(userId, State.START);
         commonUtils.removeTariffId(userId);
@@ -298,7 +309,7 @@ public class MessageServiceImpl implements MessageService {
     private void adminsList(Long userId) {
         User user = commonUtils.getUser(userId);
         if (user.getAdmin() < 5) {
-            sender.sendMessage(userId, langService.getMessage(LangFields.ADMIN_ACCESS_DENIDED, userId).formatted(5, user.getAdmin()));
+            sender.sendMessage(userId, langService.getMessage(LangFields.ADMIN_ACCESS_DENIED, userId).formatted(5, user.getAdmin()));
             return;
         }
         List<User> admins = userRepository.findAllByAdminAfter(0);
@@ -315,7 +326,7 @@ public class MessageServiceImpl implements MessageService {
         }
         User user = commonUtils.getUser(userId);
         if (user.getAdmin() < 4) {
-            sender.sendMessage(userId, langService.getMessage(LangFields.ADMIN_ACCESS_DENIDED, userId).formatted(4, user.getAdmin()));
+            sender.sendMessage(userId, langService.getMessage(LangFields.ADMIN_ACCESS_DENIED, userId).formatted(4, user.getAdmin()));
             return;
         }
         user.setState(State.SENDING_TRANSFER_USER_ID);
@@ -328,7 +339,7 @@ public class MessageServiceImpl implements MessageService {
         }
         User user = commonUtils.getUser(userId);
         if (user.getAdmin() < 3) {
-            sender.sendMessage(userId, langService.getMessage(LangFields.ADMIN_ACCESS_DENIDED, userId).formatted(3, user.getAdmin()));
+            sender.sendMessage(userId, langService.getMessage(LangFields.ADMIN_ACCESS_DENIED, userId).formatted(3, user.getAdmin()));
             return;
         }
         List<Photo> photos = photoRepository.findAllByStatus(Status.DONT_SEE);
@@ -340,18 +351,30 @@ public class MessageServiceImpl implements MessageService {
             Long screenshotId = photo.getId();
             InlineKeyboardMarkup keyboard = buttonService.screenshotKeyboard(userId, screenshotId);
             String message = langService.getMessage(LangFields.UN_CHECKED_SCREENSHOT_TEXT, userId);
-            String tariff = "Oylik";
-            if (photo.getTariff() == 2)
-                tariff = "2 oylik";
-            message = message + "\n" + getChatToString(sender.getChat(photo.getSendUserId())) + "\n" + "Tariff: " + tariff;
-            sender.sendDocument(userId, message, photo.getPath(), keyboard);
+            try {
+                FileTime lastModifiedTime = Files.getLastModifiedTime(Path.of(photo.getPath()));
+
+                Instant instant = lastModifiedTime.toInstant();
+
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+                        .withZone(ZoneId.of("Asia/Tashkent"));
+
+                String formattedDate = formatter.format(instant);
+                String tariff = "Oylik";
+                if (photo.getTariff() == 2)
+                    tariff = "2 oylik";
+                message = message + "\n" + getChatToString(sender.getChat(photo.getSendUserId())) + "\n" + "Tariff: " + tariff + "\n" + formattedDate;
+                sender.sendDocument(userId, message, photo.getPath(), keyboard);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
     private void transactionsList(Long userId) {
         User user = commonUtils.getUser(userId);
         if (user.getAdmin() < 2) {
-            sender.sendMessage(userId, langService.getMessage(LangFields.ADMIN_ACCESS_DENIDED, userId).formatted(2, user.getAdmin()));
+            sender.sendMessage(userId, langService.getMessage(LangFields.ADMIN_ACCESS_DENIED, userId).formatted(2, user.getAdmin()));
             return;
         }
         user.setState(State.SELECT_PAYMENT_METHOD);
@@ -393,14 +416,18 @@ public class MessageServiceImpl implements MessageService {
 
     private void savePhoto(Message message) {
         Long userId = message.getFrom().getId();
+        Integer tariffId = commonUtils.getTariffId(userId);
+
+        if (tariffId == null)
+            tariffId = 2;
+
         List<PhotoSize> photo = message.getPhoto();
         if (photo.isEmpty()) {
             return;
         }
         PhotoSize photoSize = photo.stream().max(Comparator.comparing(PhotoSize::getFileSize)).get();
         String filePath = sender.getFilePath(photoSize.getFileId());
-        savePhotoAndSendSuccess(userId, filePath);
-
+        savePhotoAndSendSuccess(userId, filePath, tariffId);
     }
 
     private void sendPayCardNumber(Long userId) {
@@ -640,16 +667,15 @@ public class MessageServiceImpl implements MessageService {
 
         User user = commonUtils.getUser(userId);
         if (user.getContactNumber() == null) {
-            commonUtils.setState(userId, State.SENDING_CARD_NUMBER);
             sendContactNumber(userId);
             return;
         }
         if (user.getMethod() != null) {
             return;
         }
-        commonUtils.setState(userId, State.SENDING_CARD_NUMBER);
+        commonUtils.setState(userId, State.START);
         String message = langService.getMessage(LangFields.SEND_CARD_NUMBER_TEXT, userId);
-        ReplyKeyboard replyKeyboard = buttonService.withString(List.of(langService.getMessage(LangFields.BACK_TEXT, userId)));
+        ReplyKeyboard replyKeyboard = buttonService.withWebApp(userId);
         sender.sendMessage(userId, message, replyKeyboard);
     }
 

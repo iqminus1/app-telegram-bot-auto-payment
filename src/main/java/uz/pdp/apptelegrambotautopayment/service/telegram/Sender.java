@@ -18,6 +18,10 @@ import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import uz.pdp.apptelegrambotautopayment.enums.LangFields;
+import uz.pdp.apptelegrambotautopayment.model.Group;
+import uz.pdp.apptelegrambotautopayment.repository.GroupRepository;
+import uz.pdp.apptelegrambotautopayment.service.LangService;
 import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
 
 import java.io.IOException;
@@ -27,13 +31,19 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.UUID;
 
 @Component
 public class Sender extends DefaultAbsSender {
 
-    public Sender() {
+    private final GroupRepository groupRepository;
+    private final LangService langService;
+
+    public Sender(GroupRepository groupRepository, LangService langService) {
         super(new DefaultBotOptions(), AppConstants.BOT_TOKEN);
+        this.groupRepository = groupRepository;
+        this.langService = langService;
     }
 
     public void sendMessage(Long userId, String text) {
@@ -180,7 +190,11 @@ public class Sender extends DefaultAbsSender {
         sendPhoto.setChatId(userId);
         sendPhoto.setReplyMarkup(keyboard);
         sendPhoto.setParseMode("Markdown");
-        executeAsync(sendPhoto);
+        try {
+            execute(sendPhoto);
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void changeCaption(Long userId, Integer messageId, String text) {
@@ -203,7 +217,11 @@ public class Sender extends DefaultAbsSender {
         document.setDocument(photo);
         document.setChatId(userId);
         document.setReplyMarkup(keyboard);
-        executeAsync(document);
+        try {
+            execute(document);
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void deleteMessage(Long userId, Integer messageId) {
@@ -212,5 +230,14 @@ public class Sender extends DefaultAbsSender {
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void sendLink(Long userId) {
+        List<Group> groups = groupRepository.findAll();
+        if (groups.size() != 1)
+            return;
+        Group group = groups.get(0);
+        String link = getLink(group.getGroupId());
+        sendMessage(userId, langService.getMessage(LangFields.LINK_TEXT, userId) + " " + link);
     }
 }

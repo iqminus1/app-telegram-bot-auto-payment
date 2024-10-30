@@ -13,12 +13,10 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import uz.pdp.apptelegrambotautopayment.dto.request.*;
 import uz.pdp.apptelegrambotautopayment.dto.response.*;
-import uz.pdp.apptelegrambotautopayment.enums.LangFields;
 import uz.pdp.apptelegrambotautopayment.model.Group;
 import uz.pdp.apptelegrambotautopayment.model.User;
 import uz.pdp.apptelegrambotautopayment.repository.GroupRepository;
 import uz.pdp.apptelegrambotautopayment.service.AtmosService;
-import uz.pdp.apptelegrambotautopayment.service.LangService;
 import uz.pdp.apptelegrambotautopayment.service.telegram.Sender;
 import uz.pdp.apptelegrambotautopayment.utils.AppConstants;
 import uz.pdp.apptelegrambotautopayment.utils.CommonUtils;
@@ -39,7 +37,6 @@ public class AtmosServiceImpl implements AtmosService {
     private final CommonUtils commonUtils;
     private final GroupRepository groupRepository;
     private final Sender sender;
-    private final LangService langService;
     private String token = null;
     private long tokenExpirationTime = 0;
 
@@ -114,7 +111,12 @@ public class AtmosServiceImpl implements AtmosService {
                 String code = result.get("code").asText();
                 String errorMessage = result.get("description").asText();
                 if (code.startsWith("STPIMS-ERR-")) {
-                    return CardBindingInitResponse.builder().errorCode(code.substring(AppConstants.ERROR_LENGTH)).errorMessage(errorMessage).build();
+                    if (code.equals("STPIMS-ERR-133")) {
+                        Long cardId = data.get("data").get("card_id").asLong();
+                        String token = data.get("data").get("card_token").asText();
+                        return CardBindingInitResponse.builder().errorCode(code.substring(AppConstants.ERROR_LENGTH)).errorMessage(errorMessage).cardId(cardId).cardToken(token).build();
+                    }
+                    return CardBindingInitResponse.builder().errorCode(code.substring(AppConstants.ERROR_LENGTH)).errorMessage(errorMessage).cardToken(token).build();
                 }
                 String transactionId = data.get("transaction_id").asText();
                 String text = data.get("phone").asText();
