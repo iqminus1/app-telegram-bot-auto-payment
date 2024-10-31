@@ -1,6 +1,10 @@
 server:
   port: 80
 spring:
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 80MB
   datasource:
     hikari:
       maximum-pool-size: 10
