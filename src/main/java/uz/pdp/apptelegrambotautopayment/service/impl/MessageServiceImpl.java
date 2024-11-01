@@ -78,7 +78,11 @@ public class MessageServiceImpl implements MessageService {
                         if (langService.getMessage(LangFields.REMOVE_CARD_NUMBER_TEXT, userId).equals(text)) {
                             removeUserCard(userId);
                         } else if (langService.getMessage(LangFields.ADD_CARD_NUMBER_TEXT, userId).equals(text)) {
-                            sendAddCardNumberText(userId);
+                            if (AppConstants.IS_CARD) {
+                                commonUtils.setTariffId(userId, 3);
+                                sendPayCardNumber(userId);
+                            } else
+                                sendAddCardNumberText(userId);
                         } else if (langService.getMessage(LangFields.BUTTON_PAYMENT_HISTORY_TEXT, userId).equals(text)) {
                             showPaymentHistory(userId);
                         } else if (langService.getMessage(LangFields.START_PAYMENT_TEXT, userId).equals(text)) {
@@ -212,7 +216,7 @@ public class MessageServiceImpl implements MessageService {
         Integer tariffId = commonUtils.getTariffId(userId);
 
         if (tariffId == null)
-            tariffId = 2;
+            tariffId = 3;
 
         Document document = message.getDocument();
 
@@ -372,6 +376,8 @@ public class MessageServiceImpl implements MessageService {
                 String tariff = "Oylik";
                 if (photo.getTariff() == 2)
                     tariff = "2 oylik";
+                else if (photo.getTariff() == 3)
+                    tariff = "Bir martalik";
                 message = message + "\n" + getChatToString(sender.getChat(photo.getSendUserId())) + "\n" + "Tariff: " + tariff + "\n" + formattedDate;
                 sender.sendDocument(userId, message, photo.getPath(), keyboard);
             } catch (IOException e) {
@@ -428,7 +434,7 @@ public class MessageServiceImpl implements MessageService {
         Integer tariffId = commonUtils.getTariffId(userId);
 
         if (tariffId == null)
-            tariffId = 2;
+            tariffId = 3;
 
         List<PhotoSize> photo = message.getPhoto();
         if (photo.isEmpty()) {
@@ -447,7 +453,9 @@ public class MessageServiceImpl implements MessageService {
         if (method == null || method.equals(PaymentMethod.CARD)) {
             String text = langService.getMessage(LangFields.ADMIN_CARD_NUMBER_TEXT, userId);
             String price = decimalFormat.format(AppConstants.PRICE_ONCE);
-            if (commonUtils.getTariffId(userId) == 2)
+            if (commonUtils.getTariffId(userId) == 3) {
+                price = decimalFormat.format(AppConstants.PRICE_UNLIMITED);
+            } else if (commonUtils.getTariffId(userId) == 2)
                 price = decimalFormat.format(AppConstants.PRICE_TWICE);
 
             String som = langService.getMessage(LangFields.SOM_TEXT, userId);
