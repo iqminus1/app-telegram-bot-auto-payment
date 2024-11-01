@@ -11,6 +11,7 @@ public interface AppConstants {
     String START = "/start";
     Long PRICE_ONCE = 49000L;
     Long PRICE_TWICE = 89000L;
+    Long PRICE_UNLIMITED = 99000L;
     String OFERTA_I_AGREE_DATA = "iAgree";
 
     //Auth Atmos

@@ -77,6 +77,8 @@ public class CallbackServiceImpl implements CallbackService {
         String tariff = "Oylik";
         if (screenshot.getTariff() == 2)
             tariff = "2 oylik";
+        else if (screenshot.getTariff() == 3)
+            tariff = "Bir martalik";
         message = message + "\n" + getChatToString(sender.getChat(userId)) + "\n" + "Tariff: " + tariff;
         sender.changeCaption(userId, messageId, message);
 
@@ -92,18 +94,24 @@ public class CallbackServiceImpl implements CallbackService {
         String tariff = "Oylik";
         if (screenshot.getTariff() == 2)
             tariff = "2 oylik";
+        else if (screenshot.getTariff() == 3)
+            tariff = "Bir martalik";
         message = message + "\n" + getChatToString(sender.getChat(userId)) + "\n" + "Tariff: " + tariff;
         sender.changeCaption(userId, messageId, message);
 
         Transaction transaction = new Transaction(null, null, screenshot.getId().toString(), screenshot.getSendUserId(), AppConstants.PRICE_ONCE, LocalDateTime.now(), PaymentMethod.CARD);
         if (screenshot.getTariff() == 2)
             transaction.setAmount(AppConstants.PRICE_TWICE);
+        else if (screenshot.getTariff() == 3)
+            transaction.setAmount(AppConstants.PRICE_UNLIMITED);
 
         transactionRepository.save(transaction);
 
         User user = commonUtils.getUser(screenshot.getSendUserId());
         user.setMethod(PaymentMethod.CARD);
-        userRepository.save(setSubscriptionTime(user, screenshot.getTariff()));
+        if (screenshot.getTariff() != 3)
+            userRepository.save(setSubscriptionTime(user, screenshot.getTariff()));
+        else userRepository.save(setSubscriptionTime(user, 12000));
 
         List<Group> groups = groupRepository.findAll();
         if (groups.size() == 1) {

@@ -121,8 +121,9 @@ public class ButtonServiceImpl implements ButtonService {
 
         if (AppConstants.IS_CARD) {
             if (user.getMethod() == null || user.getMethod().equals(PaymentMethod.CARD)) {
-                list.add(langService.getMessage(LangFields.ONCE, userId));
-                list.add(langService.getMessage(LangFields.TWICE, userId));
+//                list.add(langService.getMessage(LangFields.ONCE, userId));
+//                list.add(langService.getMessage(LangFields.TWICE, userId));
+                list.add(langService.getMessage(LangFields.ADD_CARD_NUMBER_TEXT, userId));
             }
         }
 
