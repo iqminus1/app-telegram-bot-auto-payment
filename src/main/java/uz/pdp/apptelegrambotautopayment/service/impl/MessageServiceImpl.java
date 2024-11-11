@@ -95,12 +95,6 @@ public class MessageServiceImpl implements MessageService {
                             sendPayCardNumber(userId);
                         } else if (langService.getMessage(LangFields.ADMIN_MENU_TEXT, userId).equals(text)) {
                             sendAdminMenu(userId);
-                        } else if (langService.getMessage(LangFields.ONCE, userId).equals(text)) {
-                            commonUtils.setTariffId(userId, 1);
-                            sendPayCardNumber(userId);
-                        } else if (langService.getMessage(LangFields.TWICE, userId).equals(text)) {
-                            commonUtils.setTariffId(userId, 2);
-                            sendPayCardNumber(userId);
                         } else
                             sender.sendMessage(userId, langService.getMessage(LangFields.USE_BUTTONS, userId));
                     }

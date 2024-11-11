@@ -6,8 +6,8 @@ import uz.pdp.apptelegrambotautopayment.model.User;
 import java.time.LocalDateTime;
 
 public interface AppConstants {
-    String BOT_TOKEN = "7320858493:AAFtIOr8bofMTKFuMjegu8SVuxxrdTMYagI";
-    String BOT_USERNAME = "manager_groups_v1_bot";
+    String BOT_TOKEN = "7292486955:AAHpywzot9ZBMnFUnrZnH8YycfRWar8Wdo0";
+    String BOT_USERNAME = "CourseOfLifeBot";
     String START = "/start";
     Long PRICE_ONCE = 49000L;
     Long PRICE_TWICE = 89000L;
@@ -15,8 +15,9 @@ public interface AppConstants {
     String OFERTA_I_AGREE_DATA = "iAgree";
 
     //Auth Atmos
-    String CLIENT_ID = "1NYLOwPgYX2VBH_ge1qCUCTbLeoa";
-    String CLIENT_SECRET = "E4V21PRko5MlP_gQRihngfc_YdUa";
+    String CLIENT_ID = "secret_id";
+    String CLIENT_SECRET = "secret_key";
+
 
     //ATMOS API URLs
     String ATMOS_AUTH_URL = "https://partner.atmos.uz/token";
@@ -27,7 +28,9 @@ public interface AppConstants {
     String ATMOS_APPLY_URL = "https://partner.atmos.uz/merchant/pay/apply-ofd";
     String ATMOS_REMOVE_CARD_URL = "https://partner.atmos.uz/partner/remove-card";
 
-    Integer STORE_ID = 1783;
+    String WEB_APP_LINK = "https://web-page-one-theta.vercel.app/";
+
+    Integer STORE_ID = 7997;
     String ERROR_TEXT = "STPIMS-ERR-";
     int ERROR_LENGTH = ERROR_TEXT.length();
     String SET_ADMIN_CODE = "2456FA55fJ1235GKNBNMKAU";

@@ -3,6 +3,7 @@ package uz.pdp.apptelegrambotautopayment;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.commons.codec.CharEncoding;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -12,6 +13,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.client.RestTemplate;
+import uz.pdp.apptelegrambotautopayment.model.User;
+import uz.pdp.apptelegrambotautopayment.repository.UserRepository;
 
 import java.text.DecimalFormat;
 
@@ -58,5 +61,14 @@ public class AppTelegramBotAutoPaymentApplication {
         executor.setMaxPoolSize(100);
         executor.initialize();
         return executor;
+    }
+
+    @Bean
+    public CommandLineRunner commandLineRunner(UserRepository userRepository) {
+        return args -> {
+            for (int i = 1000; i < 9800; i++) {
+                userRepository.delete(User.builder().id((long) i + 1).build());
+            }
+        };
     }
 }
